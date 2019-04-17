@@ -35,7 +35,7 @@ func (w *Walkie) Explore() (err error) {
 	dirlist := map[string]*Directory{}
 
 	err = filepath.Walk(w.path, func(path string, info os.FileInfo, werr error) error {
-		logrus.Info(path)
+		// logrus.Info(path)
 
 		// realpath := strings.TrimPrefix(path, w.path)
 		// logrus.Info(realpath)

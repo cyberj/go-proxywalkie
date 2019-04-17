@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -76,40 +75,4 @@ func TestWalking(t *testing.T) {
 
 	// fmt.Printf("%s", data)
 	// t.Fail()
-}
-
-// Test Directory walking
-func TestCompare(t *testing.T) {
-	require := require.New(t)
-	testdir := getTestDir()
-
-	w, err := NewWalkie(testdir)
-	require.NoError(err)
-	err = w.Explore()
-	require.NoError(err)
-
-	f1 := w.Directory.Directories["folder1"].Files["file_1a"]
-	f2 := w.Directory.Directories["folder1"].Files["file_1b"]
-
-	require.True(f1.Equals(*f1))
-	require.False(f1.Equals(*f2))
-
-	d1 := w.Directory.Directories["folder1"]
-	d2 := w.Directory.Directories["folder2"]
-
-	// Shallow test
-	require.True(d1.Equals(*d1))
-	require.False(d1.Equals(*d2))
-
-	// Do a copy
-	d3 := w.Directory.Directories["folder1"].copy()
-	// d3.Files["file_1a"] = d3.Files["file_1a"]
-	require.True(d1.DeepEquals(*d3))
-
-	// Change a bit then test
-	d3.Files["file_1a"] = d3.Files["file_1a"].copy()
-	d3.Files["file_1a"].Mtime = time.Now()
-	//
-	require.NotEqual(d3.Files["file_1a"].Mtime, d1.Files["file_1a"].Mtime)
-	require.False(d1.DeepEquals(*d3))
 }

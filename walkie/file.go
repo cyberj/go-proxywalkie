@@ -121,6 +121,24 @@ func (d Directory) DeepEquals(x Directory) bool {
 		}
 
 	}
+	// check directories by len
+	if len(d.Directories) != len(x.Directories) {
+		return false
+	}
+	// Then one by one
+	var xdir *Directory
+	for path, d := range d.Directories {
+
+		xdir, exists = x.Directories[path]
+		if !exists {
+			return false
+		}
+
+		if !d.DeepEquals(*xdir) {
+			return false
+		}
+
+	}
 
 	return true
 }

@@ -1,0 +1,113 @@
+package walkie
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+)
+
+// Test Directory walking
+func TestCompare(t *testing.T) {
+	require := require.New(t)
+	testdir := getTestDir()
+
+	w, err := NewWalkie(testdir)
+	require.NoError(err)
+	err = w.Explore()
+	require.NoError(err)
+
+	dirlist := w.Directory.getSubdirs()
+	require.Len(dirlist, 5)
+	dirlist = w.Directory.getSubdirsOnly()
+	require.Len(dirlist, 4)
+
+	// data, err := json.MarshalIndent(dirlist, "", "  ")
+	// require.NoError(err)
+	//
+	// fmt.Printf("%s", data)
+	// t.Fail()
+
+	f1 := w.Directory.Directories["folder1"].Files["file_1a"]
+	f2 := w.Directory.Directories["folder1"].Files["file_1b"]
+
+	require.True(f1.Equals(*f1))
+	require.False(f1.Equals(*f2))
+
+	d1 := w.Directory.Directories["folder1"]
+	d2 := w.Directory.Directories["folder2"]
+
+	// Shallow test
+	require.True(d1.Equals(*d1))
+	require.False(d1.Equals(*d2))
+
+	// Do a copy
+	d3 := w.Directory.Directories["folder1"].copy()
+	// d3.Files["file_1a"] = d3.Files["file_1a"]
+	require.True(d1.DeepEquals(*d3))
+	require.True(d3.DeepEquals(*d1))
+
+	// Change a bit then test
+	d3.Files["file_1a"] = d3.Files["file_1a"].copy()
+	d3.Files["file_1a"].Mtime = time.Now()
+	//
+	require.NotEqual(d3.Files["file_1a"].Mtime, d1.Files["file_1a"].Mtime)
+	require.False(d1.DeepEquals(*d3))
+	require.False(d3.DeepEquals(*d1))
+
+	d4 := w.Directory.Directories["folder2"].copy()
+	require.True(d2.DeepEquals(*d4))
+	require.True(d4.DeepEquals(*d2))
+	d4.Directories["folder_22"].Files["file_22b"].SHA256 = "Hello"
+	require.False(d2.DeepEquals(*d4))
+	require.False(d4.DeepEquals(*d2))
+
+}
+
+// Test Directory copy
+func TestCopydir(t *testing.T) {
+	require := require.New(t)
+
+	var err error
+
+	require.NoError(clean())
+	defer clean()
+
+	parent_dir := getTestAssetsDir()
+	testdir := getTestDir()
+	synced_dir := filepath.Join(parent_dir, "synced_dir")
+
+	woriginal, err := NewWalkie(testdir)
+	require.NoError(err)
+	require.NoError(woriginal.Explore())
+
+	wresult, err := NewWalkie(synced_dir)
+	require.NoError(err)
+	require.NoError(wresult.Explore())
+
+	require.Len(wresult.Directory.Directories, 0)
+	toadd, toremove := woriginal.Directory.DiffDir(*wresult.Directory)
+	require.Len(toadd, 4)
+	require.Len(toremove, 0)
+
+	err = woriginal.Directory.CopyDir(synced_dir)
+	require.NoError(err)
+
+	// Reexplore
+	require.NoError(wresult.Explore())
+	require.Len(wresult.Directory.Directories, 2)
+
+	// Re-check diff again
+	toadd, toremove = woriginal.Directory.DiffDir(*wresult.Directory)
+	require.Len(toadd, 0)
+	require.Len(toremove, 0)
+
+	require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
+	// Re-check diff again
+	require.NoError(wresult.Explore())
+	toadd, toremove = woriginal.Directory.DiffDir(*wresult.Directory)
+	require.Len(toadd, 0)
+	require.Len(toremove, 1)
+}

@@ -119,6 +119,26 @@ func (d Directory) CopyDir(path string) (err error) {
 	return
 }
 
+// CleanDir remove useless directories from path
+func (d Directory) CleanDir(path string, target Directory) (nb int, err error) {
+
+	_, toremove := d.DiffDir(target)
+
+	for _, v := range toremove {
+		// logrus.Infof("create %s", filepath.Join(path, v))
+		err2 := os.RemoveAll(filepath.Join(path, v))
+		if err2 != nil {
+
+		} else {
+			nb++
+		}
+	}
+
+	// logrus.Infof("nb=%d", nb)
+
+	return
+}
+
 // Diff for 2 directories structure
 func (d Directory) DiffDir(target Directory) (toadd, toremove []string) {
 
@@ -174,6 +194,27 @@ func (d Directory) getSubdirs() (directories []string) {
 	return
 }
 
+// Get Subdirectories list
+func (d Directory) getSubfiles() (files map[string]*File) {
+
+	files = map[string]*File{}
+
+	for k, v := range d.Files {
+		files[k] = v
+	}
+
+	for _, dir := range d.Directories {
+
+		dirfiles := dir.getSubfiles()
+
+		for _, v := range dirfiles {
+			files[filepath.Join(dir.Name, v.Name)] = v
+		}
+	}
+
+	return
+}
+
 // Get Subdirectories list without itself
 func (d Directory) getSubdirsOnly() (directories []string) {
 
@@ -182,6 +223,51 @@ func (d Directory) getSubdirsOnly() (directories []string) {
 	for _, v := range d.Directories {
 		for _, subdir := range v.getSubdirs() {
 			directories = append(directories, subdir)
+		}
+	}
+
+	return
+}
+
+// Diff for 2 directories structure : files only
+func (d Directory) DiffFiles(target Directory) (toadd, toremove []string) {
+
+	my_files := d.getSubfiles()
+	target_files := target.getSubfiles()
+
+	// copy(toadd, my_dirs)
+	// copy(toremove, target_dirs)
+	var equal bool
+
+	// Check for missing or incorrect files
+	for k, v := range my_files {
+		equal = false
+		for _, t := range target_files {
+			if v == t {
+
+				equal = v.Equals(*t)
+				break
+			}
+		}
+
+		// Not found : we add
+		if !equal {
+			toadd = append(toadd, k)
+		}
+	}
+
+	var found bool
+	// Check for useless files
+	for k, v := range target_files {
+		found = false
+		for _, t := range my_files {
+			if v == t {
+				found = true
+				break
+			}
+		}
+		if !found {
+			toremove = append(toremove, k)
 		}
 	}
 

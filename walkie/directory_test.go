@@ -1,7 +1,6 @@
 package walkie
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -66,12 +65,34 @@ func TestCompare(t *testing.T) {
 
 }
 
-// Test Directory copy
-func TestCopydir(t *testing.T) {
+// Test file list
+func TestGetSubfiles(t *testing.T) {
 	require := require.New(t)
 
 	var err error
 
+	testdir := getTestDir()
+
+	woriginal, err := NewWalkie(testdir)
+	require.NoError(err)
+	require.NoError(woriginal.Explore())
+
+	files := woriginal.Directory.getSubfiles()
+	require.Len(files, 9)
+
+	keys := []string{}
+	for k := range files {
+		keys = append(keys, k)
+	}
+	require.Contains(keys, filepath.Join("folder1", "file_1a"))
+
+}
+
+// Test file list
+func TestDiffFiles(t *testing.T) {
+	require := require.New(t)
+
+	var err error
 	require.NoError(clean())
 	defer clean()
 
@@ -87,27 +108,12 @@ func TestCopydir(t *testing.T) {
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 
-	require.Len(wresult.Directory.Directories, 0)
-	toadd, toremove := woriginal.Directory.DiffDir(*wresult.Directory)
-	require.Len(toadd, 4)
-	require.Len(toremove, 0)
-
-	err = woriginal.Directory.CopyDir(synced_dir)
-	require.NoError(err)
-
-	// Reexplore
-	require.NoError(wresult.Explore())
-	require.Len(wresult.Directory.Directories, 2)
-
-	// Re-check diff again
-	toadd, toremove = woriginal.Directory.DiffDir(*wresult.Directory)
+	toadd, toremove := woriginal.Directory.DiffFiles(*woriginal.Directory)
 	require.Len(toadd, 0)
 	require.Len(toremove, 0)
 
-	require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
-	// Re-check diff again
-	require.NoError(wresult.Explore())
-	toadd, toremove = woriginal.Directory.DiffDir(*wresult.Directory)
-	require.Len(toadd, 0)
-	require.Len(toremove, 1)
+	toadd, toremove = woriginal.Directory.DiffFiles(*wresult.Directory)
+	require.Len(toadd, 9)
+	require.Len(toremove, 0)
+
 }

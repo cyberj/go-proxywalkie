@@ -106,52 +106,38 @@ func (d Directory) copy() (newdir *Directory) {
 // Diff for 2 directories structure
 func (d Directory) DiffDir(ref Directory) (toadd, toremove []string) {
 
-	my_dirs := d.getSubdirsOnly()
-	ref_dirs := ref.getSubdirsOnly()
+	my_dirs := d.getSubdirs()
+	ref_dirs := ref.getSubdirs()
 
 	// copy(toadd, my_dirs)
 	// copy(toremove, ref_dirs)
 	var found bool
 
 	// Check for missing dirs
-	for _, v := range ref_dirs {
+	for k := range ref_dirs {
 		found = false
-		for _, t := range my_dirs {
-			if v == t {
+		for t := range my_dirs {
+			if k == t {
 				found = true
 				break
 			}
 		}
 		if !found {
-			toadd = append(toadd, v)
+			toadd = append(toadd, k)
 		}
 	}
 
 	// Check for useless dirs
-	for _, v := range my_dirs {
+	for k := range my_dirs {
 		found = false
-		for _, t := range ref_dirs {
-			if v == t {
+		for t := range ref_dirs {
+			if k == t {
 				found = true
 				break
 			}
 		}
 		if !found {
-			toremove = append(toremove, v)
-		}
-	}
-
-	return
-}
-
-// Get Subdirectories list
-func (d Directory) getSubdirs() (directories []string) {
-
-	directories = []string{d.Name}
-
-	for _, v := range d.Directories {
-		for _, subdir := range v.getSubdirs() {
-			directories = append(directories, filepath.Join(d.Name, subdir))
+			toremove = append(toremove, k)
 		}
 	}
 
@@ -179,38 +165,16 @@ func (d Directory) getSubfiles() (files map[string]*File) {
 	return
 }
 
-// Stats
-func (d Directory) Stat() (nbdir, nbfiles int) {
-
-	for range d.getSubfiles() {
-		nbfiles++
-	}
-
-	for range d.getSubdirsOnly() {
-		nbdir++
-	}
-
-	return
-}
-
 // Get Subdirectories list
-func (d Directory) ListFiles() (files []string) {
+func (d *Directory) getSubdirs() (directories map[string]*Directory) {
 
-	for k := range d.getSubfiles() {
-		files = append(files, k)
-	}
-
-	return
-}
-
-// Get Subdirectories list without itself
-func (d Directory) getSubdirsOnly() (directories []string) {
-
-	directories = []string{}
+	directories = map[string]*Directory{}
 
 	for _, v := range d.Directories {
-		for _, subdir := range v.getSubdirs() {
-			directories = append(directories, subdir)
+		directories[v.Name] = v
+
+		for subdirpath, subdir := range v.getSubdirs() {
+			directories[filepath.Join(v.Name, subdirpath)] = subdir
 		}
 	}
 

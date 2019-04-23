@@ -19,9 +19,10 @@ func TestCompare(t *testing.T) {
 	require.NoError(err)
 
 	dirlist := w.Directory.getSubdirs()
-	require.Len(dirlist, 5)
-	dirlist = w.Directory.getSubdirsOnly()
+
 	require.Len(dirlist, 4)
+	// dirlist = w.Directory.getSubdirsOnly()
+	// require.Len(dirlist, 4)
 
 	// data, err := json.MarshalIndent(dirlist, "", "  ")
 	// require.NoError(err)
@@ -87,11 +88,11 @@ func TestGetSubfiles(t *testing.T) {
 	require.Contains(keys, filepath.Join("folder1", "file_1a"))
 	require.Contains(keys, filepath.Join("folder2", "folder_21", "file_21b"))
 
-	dirnb, filenb := woriginal.Directory.Stat()
+	dirnb, filenb := woriginal.Stat()
 	require.Equal(4, dirnb)
 	require.Equal(11, filenb)
 
-	files_pub := woriginal.Directory.ListFiles()
+	files_pub := woriginal.ListFiles()
 	require.Len(files_pub, 11)
 
 }

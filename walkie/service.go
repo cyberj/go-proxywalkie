@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/fsnotify/fsnotify"
 )
 
 var Version = "X.X.X"
@@ -15,12 +16,28 @@ type Walkie struct {
 	path string
 
 	Directory *Directory
+
+	// hashmap
+	directories map[string]*Directory
+	files       map[string]*File
+
+	watcher *fsnotify.Watcher
 }
 
 // NewWalkie create new Walkie service
 func NewWalkie(path string) (walkie *Walkie, err error) {
 	walkie = &Walkie{
 		path: path,
+
+		Directory: &Directory{
+			Name: "",
+			// Mtime:       info.ModTime(),
+			Files:       map[string]*File{},
+			Directories: map[string]*Directory{},
+		},
+
+		directories: map[string]*Directory{},
+		files:       map[string]*File{},
 	}
 
 	_, err = os.Stat(path)
@@ -29,6 +46,11 @@ func NewWalkie(path string) (walkie *Walkie, err error) {
 		return
 	}
 
+	err = walkie.notify_init()
+	if err != nil {
+		logrus.Errorf("Error creating watcher : %s", err)
+		return
+	}
 	return
 }
 
@@ -81,8 +103,38 @@ func (w *Walkie) Explore() (err error) {
 	// fmt.Printf("%s", data2)
 
 	w.Directory = dirlist[w.path]
+
+	w.files = w.Directory.getSubfiles()
+	w.directories = w.Directory.getSubdirs()
 	// data2, _ := json.Marshal(w.Directory)
 	// fmt.Printf("%s", data2)
+
+	return
+}
+
+// Close Watcher
+func (w *Walkie) Close() {
+
+	w.watcher.Close()
+
+	return
+}
+
+// Stats
+func (w *Walkie) Stat() (nbdir, nbfiles int) {
+
+	nbdir = len(w.directories)
+	nbfiles = len(w.files)
+
+	return
+}
+
+// Get Subdirectories list
+func (w *Walkie) ListFiles() (files []string) {
+
+	for k := range w.files {
+		files = append(files, k)
+	}
 
 	return
 }

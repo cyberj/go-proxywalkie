@@ -64,6 +64,9 @@ func TestWalking(t *testing.T) {
 	_, err = json.MarshalIndent(w.Directory, "", "  ")
 	require.NoError(err)
 
+	require.Len(w.directories, 4)
+	require.Len(w.files, 11)
+
 	// fmt.Printf("%s", data)
 	// t.Fail()
 }

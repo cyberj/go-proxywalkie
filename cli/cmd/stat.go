@@ -46,7 +46,7 @@ var statCmd = &cobra.Command{
 		logrus.Infof("Walkie Explore: %s", time.Since(starttime))
 		intermediate = time.Now()
 
-		nbdir, nbfiles := w.Directory.Stat()
+		nbdir, nbfiles := w.Stat()
 		logrus.Infof("Directories : %v", nbdir)
 		logrus.Infof("Files : %v", nbfiles)
 

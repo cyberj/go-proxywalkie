@@ -39,7 +39,7 @@ var lsCmd = &cobra.Command{
 			logrus.Fatal(err)
 		}
 
-		files := w.Directory.ListFiles()
+		files := w.ListFiles()
 		sort.Strings(files)
 
 		for _, v := range files {

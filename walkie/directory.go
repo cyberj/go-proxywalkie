@@ -103,56 +103,20 @@ func (d Directory) copy() (newdir *Directory) {
 	return
 }
 
-// CopyDir Copy directory structure from this dir
-func (d Directory) CopyDir(path string) (err error) {
-
-	directories := d.getSubdirsOnly()
-
-	for _, v := range directories {
-		// logrus.Infof("create %s", filepath.Join(path, v))
-		err = os.MkdirAll(filepath.Join(path, v), 0755)
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-// CleanDir remove useless directories from path
-func (d Directory) CleanDir(path string, target Directory) (nb int, err error) {
-
-	_, toremove := d.DiffDir(target)
-
-	for _, v := range toremove {
-		// logrus.Infof("create %s", filepath.Join(path, v))
-		err2 := os.RemoveAll(filepath.Join(path, v))
-		if err2 != nil {
-
-		} else {
-			nb++
-		}
-	}
-
-	// logrus.Infof("nb=%d", nb)
-
-	return
-}
-
 // Diff for 2 directories structure
-func (d Directory) DiffDir(target Directory) (toadd, toremove []string) {
+func (d Directory) DiffDir(ref Directory) (toadd, toremove []string) {
 
 	my_dirs := d.getSubdirsOnly()
-	target_dirs := target.getSubdirsOnly()
+	ref_dirs := ref.getSubdirsOnly()
 
 	// copy(toadd, my_dirs)
-	// copy(toremove, target_dirs)
+	// copy(toremove, ref_dirs)
 	var found bool
 
 	// Check for missing dirs
-	for _, v := range my_dirs {
+	for _, v := range ref_dirs {
 		found = false
-		for _, t := range target_dirs {
+		for _, t := range my_dirs {
 			if v == t {
 				found = true
 				break
@@ -164,9 +128,9 @@ func (d Directory) DiffDir(target Directory) (toadd, toremove []string) {
 	}
 
 	// Check for useless dirs
-	for _, v := range target_dirs {
+	for _, v := range my_dirs {
 		found = false
-		for _, t := range my_dirs {
+		for _, t := range ref_dirs {
 			if v == t {
 				found = true
 				break
@@ -230,19 +194,19 @@ func (d Directory) getSubdirsOnly() (directories []string) {
 }
 
 // Diff for 2 directories structure : files only
-func (d Directory) DiffFiles(target Directory) (toadd, toremove []string) {
+func (d Directory) DiffFiles(ref Directory) (toadd, toremove []string) {
 
 	my_files := d.getSubfiles()
-	target_files := target.getSubfiles()
+	ref_files := ref.getSubfiles()
 
 	// copy(toadd, my_dirs)
-	// copy(toremove, target_dirs)
+	// copy(toremove, ref_dirs)
 	var equal bool
 
 	// Check for missing or incorrect files
-	for k, v := range my_files {
+	for k, v := range ref_files {
 		equal = false
-		for _, t := range target_files {
+		for _, t := range my_files {
 			if v == t {
 
 				equal = v.Equals(*t)
@@ -258,9 +222,9 @@ func (d Directory) DiffFiles(target Directory) (toadd, toremove []string) {
 
 	var found bool
 	// Check for useless files
-	for k, v := range target_files {
+	for k, v := range my_files {
 		found = false
-		for _, t := range my_files {
+		for _, t := range ref_files {
 			if v == t {
 				found = true
 				break

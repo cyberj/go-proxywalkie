@@ -8,6 +8,7 @@ import (
 )
 
 // Walkie service
+// We expect Directory to always be synced
 type Walkie struct {
 	path string
 

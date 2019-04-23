@@ -112,7 +112,7 @@ func TestDiffFiles(t *testing.T) {
 	require.Len(toadd, 0)
 	require.Len(toremove, 0)
 
-	toadd, toremove = woriginal.Directory.DiffFiles(*wresult.Directory)
+	toadd, toremove = wresult.Directory.DiffFiles(*woriginal.Directory)
 	require.Len(toadd, 9)
 	require.Len(toremove, 0)
 

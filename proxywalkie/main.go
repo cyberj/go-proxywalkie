@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/cyberj/go-proxywalkie/cli/cmd"
+import "github.com/cyberj/go-proxywalkie/proxywalkie/cmd"
 
 func main() {
 	cmd.Execute()

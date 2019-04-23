@@ -171,9 +171,33 @@ func (d Directory) getSubfiles() (files map[string]*File) {
 
 		dirfiles := dir.getSubfiles()
 
-		for _, v := range dirfiles {
-			files[filepath.Join(dir.Name, v.Name)] = v
+		for k, v := range dirfiles {
+			files[filepath.Join(dir.Name, k)] = v
 		}
+	}
+
+	return
+}
+
+// Stats
+func (d Directory) Stat() (nbdir, nbfiles int) {
+
+	for range d.getSubfiles() {
+		nbfiles++
+	}
+
+	for range d.getSubdirsOnly() {
+		nbdir++
+	}
+
+	return
+}
+
+// Get Subdirectories list
+func (d Directory) ListFiles() (files []string) {
+
+	for k := range d.getSubfiles() {
+		files = append(files, k)
 	}
 
 	return

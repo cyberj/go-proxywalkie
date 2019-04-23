@@ -78,13 +78,21 @@ func TestGetSubfiles(t *testing.T) {
 	require.NoError(woriginal.Explore())
 
 	files := woriginal.Directory.getSubfiles()
-	require.Len(files, 9)
+	require.Len(files, 11)
 
 	keys := []string{}
 	for k := range files {
 		keys = append(keys, k)
 	}
 	require.Contains(keys, filepath.Join("folder1", "file_1a"))
+	require.Contains(keys, filepath.Join("folder2", "folder_21", "file_21b"))
+
+	dirnb, filenb := woriginal.Directory.Stat()
+	require.Equal(4, dirnb)
+	require.Equal(11, filenb)
+
+	files_pub := woriginal.Directory.ListFiles()
+	require.Len(files_pub, 11)
 
 }
 
@@ -113,7 +121,7 @@ func TestDiffFiles(t *testing.T) {
 	require.Len(toremove, 0)
 
 	toadd, toremove = wresult.Directory.DiffFiles(*woriginal.Directory)
-	require.Len(toadd, 9)
+	require.Len(toadd, 11)
 	require.Len(toremove, 0)
 
 }

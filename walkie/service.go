@@ -7,6 +7,8 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+var Version = "X.X.X"
+
 // Walkie service
 // We expect Directory to always be synced
 type Walkie struct {

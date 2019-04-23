@@ -29,7 +29,7 @@ func TestWalkingUnknownPath(t *testing.T) {
 	// t.Fail()
 }
 
-func BenchmarkWalinkg(b *testing.B) {
+func BenchmarkWalking(b *testing.B) {
 	// run the Fib function b.N times
 	testdir := getTestDir()
 	w, err := NewWalkie(testdir)

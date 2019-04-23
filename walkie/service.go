@@ -129,7 +129,7 @@ func (w *Walkie) Stat() (nbdir, nbfiles int) {
 	return
 }
 
-// Get Subdirectories list
+// Get files directory list
 func (w *Walkie) ListFiles() (files []string) {
 
 	for k := range w.files {
@@ -137,4 +137,36 @@ func (w *Walkie) ListFiles() (files []string) {
 	}
 
 	return
+}
+
+// Get Subdirectories list
+func (w *Walkie) ListDirs() (files []string) {
+
+	for k := range w.directories {
+		files = append(files, k)
+	}
+
+	return
+}
+
+// Get a file
+func (w *Walkie) GetFile(path string) (file File, found bool) {
+
+	f, ok := w.files[path]
+	if !ok {
+		return
+	}
+
+	return *f, true
+}
+
+// Get a directory
+func (w *Walkie) GetDir(path string) (dir Directory, found bool) {
+
+	d, ok := w.directories[path]
+	if !ok {
+		return
+	}
+
+	return *d, true
 }

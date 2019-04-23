@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/cyberj/go-proxywalkie/proxy"
+	server "github.com/cyberj/go-proxywalkie/server"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +30,7 @@ var serveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		starttime := time.Now()
-		proxy, err := proxy.NewProxy(workdirPath)
+		proxy, err := server.NewServer(workdirPath)
 		if err != nil {
 			logrus.Fatal(err)
 		}

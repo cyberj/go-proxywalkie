@@ -165,6 +165,11 @@ func (d Directory) getSubfiles() (files map[string]*File) {
 	return
 }
 
+// Get all files list
+func (d Directory) ListFiles() (files map[string]*File) {
+	return d.getSubfiles()
+}
+
 // Get Subdirectories list
 func (d *Directory) getSubdirs() (directories map[string]*Directory) {
 

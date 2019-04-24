@@ -72,4 +72,9 @@ func TestCache(t *testing.T) {
 	require.NoError(err)
 
 	proxy.Ready()
+
+	require.Len(proxy.walkiedir.ListDirs(), 4)
+
+	require.False(proxy.checkFile("/totototo"))
+	require.False(proxy.checkFile("folder1/file_1a"))
 }

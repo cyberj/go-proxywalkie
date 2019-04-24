@@ -81,6 +81,9 @@ func TestGetSubfiles(t *testing.T) {
 	files := woriginal.Directory.getSubfiles()
 	require.Len(files, 11)
 
+	files = woriginal.Directory.ListFiles()
+	require.Len(files, 11)
+
 	keys := []string{}
 	for k := range files {
 		keys = append(keys, k)

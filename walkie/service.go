@@ -1,8 +1,11 @@
 package walkie
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/fsnotify/fsnotify"
@@ -22,6 +25,8 @@ type Walkie struct {
 	files       map[string]*File
 
 	watcher *fsnotify.Watcher
+
+	mu sync.RWMutex
 }
 
 // NewWalkie create new Walkie service
@@ -113,10 +118,11 @@ func (w *Walkie) Explore() (err error) {
 	// data2, _ := json.Marshal(dirlist)
 	// fmt.Printf("%s", data2)
 
+	w.mu.Lock()
 	w.Directory = dirlist[w.path]
-
 	w.files = w.Directory.getSubfiles()
 	w.directories = w.Directory.getSubdirs()
+	w.mu.Unlock()
 	// data2, _ := json.Marshal(w.Directory)
 	// fmt.Printf("%s", data2)
 
@@ -133,9 +139,10 @@ func (w *Walkie) Close() {
 
 // Stats
 func (w *Walkie) Stat() (nbdir, nbfiles int) {
-
+	w.mu.RLock()
 	nbdir = len(w.directories)
 	nbfiles = len(w.files)
+	w.mu.RUnlock()
 
 	return
 }
@@ -173,11 +180,83 @@ func (w *Walkie) GetFile(path string) (file File, found bool) {
 
 // Get a directory
 func (w *Walkie) GetDir(path string) (dir Directory, found bool) {
+	w.mu.RLock()
 
 	d, ok := w.directories[path]
 	if !ok {
 		return
 	}
+	w.mu.RUnlock()
 
 	return *d, true
+}
+
+// Create or update a file (use slashes as path)
+func (w *Walkie) UpdateOrCreateFile(path string, r io.Reader, original_file File) (err error) {
+
+	var directory *Directory
+	var file *File
+
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	name := filepath.Base(path)
+	dir := filepath.Dir(path)
+
+	if dir == "." {
+		directory = w.Directory
+	} else {
+		var ok bool
+		directory, ok = w.directories[dir]
+		if !ok {
+			return fmt.Errorf("UpdateOrCreateFile : Directory not found")
+		}
+	}
+
+	systempath := filepath.Join(w.path, filepath.FromSlash(path))
+	// _, exists := w.files[path]
+
+	// Create or update file
+	f, err := os.OpenFile(systempath, os.O_CREATE|os.O_WRONLY, 0644)
+	defer f.Close()
+	if err != nil {
+		return
+	}
+
+	// Copy file
+	_, err = io.Copy(f, r)
+	if err != nil {
+		return
+	}
+
+	// Close it
+	if err = f.Close(); err != nil {
+		return
+	}
+
+	// Change mtime
+	err = os.Chtimes(systempath, original_file.Mtime, original_file.Mtime)
+	if err != nil {
+		return
+	}
+
+	// Get info and create file
+	info, err := os.Stat(systempath)
+	if err != nil {
+		return
+	}
+	file, err = NewFile(systempath, info)
+	if err != nil {
+		return
+	}
+
+	// Last check
+	if file.SHA256 != original_file.SHA256 {
+		return fmt.Errorf("Different SHA : newfile=%s expected=%s", file.SHA256, original_file.SHA256)
+	}
+
+	directory.Files[name] = file
+	w.files[path] = file
+
+	return
 }

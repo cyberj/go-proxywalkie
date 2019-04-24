@@ -3,9 +3,7 @@ package proxy
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"path"
 	"sync"
 	"time"
 
@@ -101,8 +99,15 @@ func (p *Proxy) syncDir() {
 }
 
 // Retrive file from server
-func (p *Proxy) getFile(fileid string) (r io.ReadCloser, err error) {
-	res, err := http.Get(path.Join(p.server_url, fileid))
+func (p *Proxy) getFile(fileid string) (err error) {
+
+	srvfile, ok := p.findFileSrv(fileid)
+	if !ok {
+		return fmt.Errorf("Unknow file")
+	}
+
+	// logrus.Error(p.server_url, fileid)
+	res, err := http.Get(p.server_url + "/" + fileid)
 	if err != nil {
 		return
 	}
@@ -112,23 +117,22 @@ func (p *Proxy) getFile(fileid string) (r io.ReadCloser, err error) {
 		return
 	}
 
-	// localpath = filepath.Join(p.path, filepath.FromSlash(fileid))
-	//
-	// io.
+	// localpath := filepath.Join(p.path, filepath.FromSlash(fileid))
+	err = p.walkiedir.UpdateOrCreateFile(fileid, res.Body, *srvfile)
+	defer res.Body.Close()
+	if err != nil {
+		return
+	}
+	return
 
-	return res.Body, nil
 }
 
 // Check if file exists
 func (p *Proxy) checkFile(filepath string) (ok bool) {
-	p.m.RLock()
-	srvfile, ok := p.serverfiles[filepath]
+	srvfile, ok := p.findFileSrv(filepath)
 	if !ok {
-		p.m.RUnlock()
 		return false
-
 	}
-	p.m.RUnlock()
 
 	myfile, ok := p.walkiedir.GetFile(filepath)
 	if !ok {
@@ -137,4 +141,15 @@ func (p *Proxy) checkFile(filepath string) (ok bool) {
 
 	return myfile.Equals(*srvfile)
 
+}
+
+// Check if file exists on serveur list
+func (p *Proxy) findFileSrv(filepath string) (srvfile *walkie.File, ok bool) {
+	p.m.RLock()
+	defer p.m.RUnlock()
+	srvfile, ok = p.serverfiles[filepath]
+	if !ok {
+		return
+	}
+	return
 }

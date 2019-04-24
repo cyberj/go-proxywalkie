@@ -73,8 +73,24 @@ func TestCache(t *testing.T) {
 
 	proxy.Ready()
 
+	// directories created
 	require.Len(proxy.walkiedir.ListDirs(), 4)
 
 	require.False(proxy.checkFile("/totototo"))
 	require.False(proxy.checkFile("folder1/file_1a"))
+	require.False(proxy.checkFile("folder2/folder_22/file_22b"))
+
+	originalFile := woriginal.Directory.Directories["folder2"].Directories["folder_22"].Files["file_22b"]
+	require.NotNil(originalFile)
+
+	f, err := os.Open(filepath.Join(testdir, "folder2", "folder_22", "file_22b"))
+	require.NoError(err)
+	defer f.Close()
+
+	err = proxy.getFile("folder2/folder_22/file_22b")
+	require.NoError(err)
+
+	require.True(proxy.checkFile("folder2/folder_22/file_22b"))
+
+	// require.False(proxy.checkFile("folder1/file_1a"))
 }

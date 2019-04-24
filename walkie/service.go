@@ -26,8 +26,13 @@ type Walkie struct {
 
 // NewWalkie create new Walkie service
 func NewWalkie(path string) (walkie *Walkie, err error) {
+	dirPath, err := filepath.Abs(path)
+	if err != nil {
+		return
+	}
+
 	walkie = &Walkie{
-		path: path,
+		path: dirPath,
 
 		Directory: &Directory{
 			Name: "",
@@ -64,6 +69,12 @@ func (w *Walkie) Explore() (err error) {
 
 		// realpath := strings.TrimPrefix(path, w.path)
 		// logrus.Info(realpath)
+		// logrus.Error(w.path)
+
+		if werr != nil {
+			logrus.Errorf("walk error %s %s", w.path, werr)
+			return nil
+		}
 
 		if info.IsDir() {
 			d, err2 := NewDirectory(info)

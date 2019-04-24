@@ -1,15 +1,13 @@
 package proxy
 
 import (
-	"encoding/json"
-	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
+	server "github.com/cyberj/go-proxywalkie/server"
 	"github.com/cyberj/go-proxywalkie/walkie"
 	"github.com/stretchr/testify/require"
 )
@@ -45,37 +43,33 @@ func clean() (err error) {
 }
 
 // Test File deletion
-func TestServer(t *testing.T) {
+func TestCache(t *testing.T) {
 	require := require.New(t)
 
-	logrus.SetLevel(logrus.DebugLevel)
+	// logrus.SetLevel(logrus.DebugLevel)
 	var err error
 
 	require.NoError(clean())
 	defer clean()
 
-	// parent_dir := getTestAssetsDir()
+	parent_dir := getTestAssetsDir()
 	testdir := getTestDir()
-	// synced_dir := filepath.Join(parent_dir, "synced_dir")
+	synced_dir := filepath.Join(parent_dir, "synced_dir")
 
 	woriginal, err := walkie.NewWalkie(testdir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	proxy, err := NewProxy(testdir)
+	srv, err := server.NewServer(testdir)
 	require.NoError(err)
 
-	ts := httptest.NewServer(proxy)
+	ts := httptest.NewServer(srv)
 	defer ts.Close()
 
-	res, err := http.Get(ts.URL)
+	// ts.URL
+
+	proxy, err := NewProxy(synced_dir, ts.URL)
 	require.NoError(err)
 
-	exporteddir := &walkie.Directory{}
-	require.NoError(json.NewDecoder(res.Body).Decode(exporteddir))
-
-	res.Body.Close()
-
-	require.True(woriginal.Directory.DeepEquals(*exporteddir))
-
+	proxy.Ready()
 }

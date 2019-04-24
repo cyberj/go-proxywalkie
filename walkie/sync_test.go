@@ -137,3 +137,49 @@ func TestDeleteFile(t *testing.T) {
 	_, toremove := wresult.Directory.DiffFiles(*woriginal.Directory)
 	require.Len(toremove, 0)
 }
+
+// Test Directory Sync
+func TestSyncdir(t *testing.T) {
+	require := require.New(t)
+
+	var err error
+
+	require.NoError(clean())
+	defer clean()
+
+	// logrus.SetLevel(logrus.DebugLevel)
+
+	parent_dir := getTestAssetsDir()
+	testdir := getTestDir()
+	synced_dir := filepath.Join(parent_dir, "synced_dir")
+	require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
+
+	woriginal, err := NewWalkie(testdir)
+	require.NoError(err)
+	require.NoError(woriginal.Explore())
+
+	wresult, err := NewWalkie(synced_dir)
+	require.NoError(err)
+	require.NoError(wresult.Explore())
+
+	require.Len(wresult.Directory.Directories, 1)
+	toadd, toremove := wresult.Directory.DiffDir(*woriginal.Directory)
+	require.Len(toadd, 4)
+	require.Len(toremove, 1)
+
+	sourcedir := *woriginal.Directory
+
+	add, del, err := wresult.SyncDir(sourcedir)
+	require.NoError(err)
+	require.Equal(4, add)
+	require.Equal(1, del)
+
+	// Reexplore
+	require.Len(wresult.Directory.Directories, 2)
+
+	// Re-check diff again
+	toadd, toremove = woriginal.Directory.DiffDir(*wresult.Directory)
+	require.Len(toadd, 0)
+	require.Len(toremove, 0)
+
+}

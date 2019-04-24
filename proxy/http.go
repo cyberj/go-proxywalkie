@@ -6,39 +6,53 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/cyberj/go-proxywalkie/walkie"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
-type Proxy struct {
-	chi.Router
+func (p *Proxy) Router() http.Handler {
+	rtr := chi.NewRouter()
+	// p.router = rtr
 
-	walkiedir *walkie.Walkie
-	path      string
+	rtr.Use(middleware.RequestID)
+	rtr.Use(middleware.RealIP)
+	rtr.Use(middleware.Logger)
+	rtr.Use(middleware.Recoverer)
+
+	// proxy.HandleFunc("/", proxy.handleOK)
+	rtr.HandleFunc("/_cache/", p.handleStatus)
+	rtr.HandleFunc("/_cache/client", p.handleServerCache)
+	rtr.HandleFunc("/_cache/server", p.handleClientCache)
+	rtr.HandleFunc("/*", p.handleServeFile)
+
+	return rtr
 }
 
-func NewProxy(path string) (proxy *Proxy, err error) {
-	proxy = &Proxy{Router: chi.NewRouter(), path: path}
+func (p *Proxy) handleStatus(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Last ping : %s", time.Since(p.lastping))
+	return
+}
 
-	walkiedir, err := walkie.NewWalkie(path)
+func (p *Proxy) handleClientCache(w http.ResponseWriter, r *http.Request) {
+
+	err := json.NewEncoder(w).Encode(p.walkiedir.Directory)
 	if err != nil {
-		return
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "Error while encoding : %s", err)
 	}
+	return
+}
 
-	proxy.walkiedir = walkiedir
-	proxy.walkiedir.Explore()
+func (p *Proxy) handleServerCache(w http.ResponseWriter, r *http.Request) {
 
-	proxy.Use(middleware.RequestID)
-	proxy.Use(middleware.RealIP)
-	proxy.Use(middleware.Logger)
-	proxy.Use(middleware.Recoverer)
-
-	proxy.HandleFunc("/", proxy.handleServeFile)
-	proxy.HandleFunc("/*", proxy.handleServeFile)
-
+	err := json.NewEncoder(w).Encode(p.serverdir)
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "Error while encoding : %s", err)
+	}
 	return
 }
 

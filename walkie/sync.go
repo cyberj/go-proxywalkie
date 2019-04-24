@@ -51,6 +51,20 @@ func (w *Walkie) CleanDir(ref Directory) (nb int, err error) {
 	return
 }
 
+// Synchronize directory
+func (w *Walkie) SyncDir(ref Directory) (add, del int, err error) {
+	add, err = w.CopyDir(ref)
+	if err != nil {
+		return
+	}
+	del, err = w.CleanDir(ref)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 // Delete files, return number of changed files
 func (w *Walkie) CleanFiles(ref Directory) (nb int, err error) {
 	defer w.Explore()

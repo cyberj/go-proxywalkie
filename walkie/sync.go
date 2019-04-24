@@ -18,6 +18,7 @@ func (w *Walkie) CopyDir(ref Directory) (nb int, err error) {
 		logrus.Debugf("create %s", path)
 		err2 := os.MkdirAll(path, 0755)
 		if err2 != nil {
+			logrus.Errorf("CopyDir/MkdirAll : %s", err2)
 			return
 		} else {
 			nb++

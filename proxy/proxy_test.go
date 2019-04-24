@@ -50,7 +50,7 @@ func TestCache(t *testing.T) {
 	var err error
 
 	require.NoError(clean())
-	defer clean()
+	defer require.NoError(clean())
 
 	parent_dir := getTestAssetsDir()
 	testdir := getTestDir()

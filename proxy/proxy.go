@@ -40,6 +40,7 @@ func NewProxy(path string, server_url string) (proxy *Proxy, err error) {
 
 	proxy.walkiedir = walkiedir
 	proxy.walkiedir.Explore()
+	// time.Sleep(10 * time.Millisecond)
 
 	proxy.getServerDirectory()
 	go proxy.syncDir()

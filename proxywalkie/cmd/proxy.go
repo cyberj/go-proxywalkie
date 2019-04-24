@@ -19,35 +19,40 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	server "github.com/cyberj/go-proxywalkie/server"
+	"github.com/cyberj/go-proxywalkie/proxy"
 	"github.com/spf13/cobra"
 )
 
 // lsCmd represents the ls command
-var serveCmd = &cobra.Command{
-	Use:   "serve",
-	Short: "Serve a path for improved proxy (server)",
+var proxyCmd = &cobra.Command{
+	Use:   "proxy",
+	Short: "Proxy (client) for Intuiface",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		starttime := time.Now()
-		proxy, err := server.NewServer(workdirPath)
+
+		logrus.Infof("Initializing Proxy")
+		server_url := cmd.Flag("server").Value.String()
+		proxy, err := proxy.NewProxy(workdirPath, server_url)
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		logrus.Infof("Proxy ready (init: %s)", time.Since(starttime))
+		logrus.Infof("Proxy initialized (%s)", time.Since(starttime))
+		proxy.Ready()
+		logrus.Infof("Proxy ready (%s)", time.Since(starttime))
 
-		http.ListenAndServe(":8080", proxy)
+		http.ListenAndServe(":8081", proxy.Router())
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(serveCmd)
+	rootCmd.AddCommand(proxyCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// lsCmd.PersistentFlags().String("foo", "", "A help for foo")
+	proxyCmd.PersistentFlags().StringP("server", "s", "", "Server")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

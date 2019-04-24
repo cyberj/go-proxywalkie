@@ -39,9 +39,9 @@ func (w *Walkie) notify_loop() {
 			if !ok {
 				return
 			}
-			logrus.Infof("event:%s", event)
+			logrus.Debugf("event:%s", event)
 			if event.Op&fsnotify.Write == fsnotify.Write {
-				logrus.Infof("modified file:%s", event.Name)
+				logrus.Debugf("modified file:%s", event.Name)
 			}
 		case err, ok := <-w.watcher.Errors:
 			if !ok {

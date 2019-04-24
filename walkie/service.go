@@ -74,7 +74,7 @@ func (w *Walkie) Explore() (err error) {
 
 			dirlist[path] = d
 			if path != w.path {
-				dirlist[filepath.Dir(path)].Directories[d.Name] = d
+				dirlist[filepath.ToSlash(filepath.Dir(path))].Directories[d.Name] = d
 			}
 
 			// data, _ := json.Marshal(d)

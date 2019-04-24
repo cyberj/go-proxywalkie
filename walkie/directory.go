@@ -158,7 +158,7 @@ func (d Directory) getSubfiles() (files map[string]*File) {
 		dirfiles := dir.getSubfiles()
 
 		for k, v := range dirfiles {
-			files[filepath.Join(dir.Name, k)] = v
+			files[filepath.ToSlash(filepath.Join(dir.Name, filepath.FromSlash(k)))] = v
 		}
 	}
 
@@ -174,7 +174,7 @@ func (d *Directory) getSubdirs() (directories map[string]*Directory) {
 		directories[v.Name] = v
 
 		for subdirpath, subdir := range v.getSubdirs() {
-			directories[filepath.Join(v.Name, subdirpath)] = subdir
+			directories[filepath.ToSlash(filepath.Join(v.Name, filepath.FromSlash(subdirpath)))] = subdir
 		}
 	}
 

@@ -22,6 +22,7 @@ type Proxy struct {
 
 	// Clean files
 	Clean bool
+	Sync  bool
 
 	server_url string
 	lastping   time.Time
@@ -34,21 +35,30 @@ type Proxy struct {
 	done    chan bool
 	running bool
 
+	// List files to fetch
+	stopCh  chan bool
+	fetchCh chan string
+
+	// Local directory
 	path string
 }
 
 func NewProxy(path string, server_url string) (proxy *Proxy, err error) {
-	return NewProxyParams(path, server_url, 1*time.Minute, false)
+	return NewProxyParams(path, server_url, 1*time.Minute, false, false)
 }
 
-func NewProxyParams(path string, server_url string, interval time.Duration, clean bool) (proxy *Proxy, err error) {
+func NewProxyParams(path string, server_url string, interval time.Duration, clean bool, sync bool) (proxy *Proxy, err error) {
 	proxy = &Proxy{
 		server_url:   server_url,
 		path:         path,
 		serverdir:    walkie.Directory{},
 		SyncInterval: interval,
 		done:         make(chan bool),
-		Clean:        clean,
+		stopCh:       make(chan bool),
+		fetchCh:      make(chan string),
+
+		Clean: clean,
+		Sync:  sync,
 	}
 
 	// proxy.m.Lock()
@@ -96,6 +106,11 @@ func (p *Proxy) Run() (err error) {
 			select {
 			case <-ticker.C:
 				p.getServerDirectory()
+			case fileid := <-p.fetchCh:
+				if fileid == "" {
+					logrus.Fatal("Main loop recieved empty fileid = should not append")
+				}
+				p.getFile(fileid)
 			case <-p.done:
 				ticker.Stop()
 				p.running = false
@@ -148,6 +163,9 @@ func (p *Proxy) getServerDirectory() (err error) {
 	if p.Clean {
 		p.cleanFiles()
 	}
+	if p.Sync {
+		p.syncFiles()
+	}
 	return
 }
 
@@ -160,6 +178,41 @@ func (p *Proxy) syncDir() {
 		logrus.Error(err)
 	}
 	logrus.Infof("syncdir : add=%v del=%v", add, del)
+
+}
+
+// syncFiles Lists all files to fetch and add them in event loop
+func (p *Proxy) syncFiles() {
+
+	p.m.RLock()
+	toadd, _ := p.walkiedir.Directory.DiffFiles(p.serverdir)
+	p.m.RUnlock()
+
+	close(p.stopCh)
+	// <-p.stopCh // Sync closing
+
+	stopCh := make(chan bool)
+	p.stopCh = stopCh
+
+	go func(add []string) {
+		for _, v := range add {
+
+			// already exists
+			if p.checkFile(v) {
+				continue
+			}
+
+			select {
+			case p.fetchCh <- v:
+			case <-p.done:
+				// close(p.tofetch)
+				return
+			case <-stopCh:
+				return
+			}
+
+		}
+	}(toadd)
 
 }
 

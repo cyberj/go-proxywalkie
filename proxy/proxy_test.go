@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 
 	server "github.com/cyberj/go-proxywalkie/server"
 	"github.com/cyberj/go-proxywalkie/walkie"
@@ -140,5 +141,43 @@ func TestSyncClean(t *testing.T) {
 	_, err = os.Stat(uselessfile_path)
 	require.Error(err)
 	require.True(os.IsNotExist(err))
+
+}
+
+// Test File deletion
+func TestSyncBackground(t *testing.T) {
+	require := require.New(t)
+
+	// logrus.SetLevel(logrus.DebugLevel)
+	var err error
+
+	require.NoError(clean())
+
+	defer clean()
+
+	parent_dir := getTestAssetsDir()
+	testdir := getTestDir()
+	synced_dir := filepath.Join(parent_dir, "synced_dir")
+
+	woriginal, err := walkie.NewWalkie(testdir)
+	require.NoError(err)
+	require.NoError(woriginal.Explore())
+
+	srv, err := server.NewServer(testdir)
+	require.NoError(err)
+
+	ts := httptest.NewServer(srv)
+	defer ts.Close()
+
+	// uselessfile_path := filepath.Join(synced_dir, "useless_file")
+	// _, err = os.Create(uselessfile_path)
+
+	proxy, err := NewProxyParams(synced_dir, ts.URL, 10*time.Minute, false, true)
+	require.NoError(err)
+
+	// Wait sync
+	time.Sleep(500 * time.Millisecond)
+	require.Len(proxy.walkiedir.ListFiles(), 11)
+	require.Len(proxy.walkiedir.ListDirs(), 4)
 
 }

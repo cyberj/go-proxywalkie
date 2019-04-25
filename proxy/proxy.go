@@ -203,13 +203,14 @@ func (p *Proxy) syncFiles() {
 			}
 
 			select {
-			case p.fetchCh <- v:
 			case <-p.done:
 				// close(p.tofetch)
 				return
 			case <-stopCh:
 				return
+			default:
 			}
+			p.fetchCh <- v
 
 		}
 	}(toadd)

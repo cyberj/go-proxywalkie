@@ -23,6 +23,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var proxyDelete bool
+var proxySyncInterval int
+var proxyServer string
+
 // lsCmd represents the ls command
 var proxyCmd = &cobra.Command{
 	Use:   "proxy",
@@ -32,8 +36,7 @@ var proxyCmd = &cobra.Command{
 		starttime := time.Now()
 
 		logrus.Infof("Initializing Proxy")
-		server_url := cmd.Flag("server").Value.String()
-		proxy, err := proxy.NewProxy(workdirPath, server_url)
+		proxy, err := proxy.NewProxyParams(workdirPath, proxyServer, time.Duration(proxySyncInterval)*time.Minute, proxyDelete)
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -52,7 +55,9 @@ func init() {
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	proxyCmd.PersistentFlags().StringP("server", "s", "", "Server")
+	proxyCmd.PersistentFlags().StringVarP(&proxyServer, "server", "s", "", "Server url")
+	proxyCmd.PersistentFlags().BoolVarP(&proxyDelete, "delete", "d", false, "Delete files")
+	proxyCmd.PersistentFlags().IntVarP(&proxySyncInterval, "sync-interval", "u", 5, "Sync interval (in minutes)")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -59,9 +58,9 @@ func (p *Proxy) handleServerCache(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) handleServeFile(w http.ResponseWriter, r *http.Request) {
 	var err error
 
-	logrus.Infof("%s", r.URL)
+	// logrus.Infof("%s", r.URL)
 	path := chi.URLParam(r, "*")
-	logrus.Infof("%s", path)
+	// logrus.Infof("%s", path)
 
 	// Don't show directories
 	if strings.HasSuffix(path, "/") {

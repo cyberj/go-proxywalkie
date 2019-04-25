@@ -70,7 +70,7 @@ func (w *Walkie) Explore() (err error) {
 	dirlist := map[string]*Directory{}
 
 	err = filepath.Walk(w.path, func(path string, info os.FileInfo, werr error) error {
-		// logrus.Info(path)
+		logrus.Info(path)
 
 		// realpath := strings.TrimPrefix(path, w.path)
 		// logrus.Info(realpath)
@@ -88,7 +88,7 @@ func (w *Walkie) Explore() (err error) {
 				return err
 			}
 
-			dirlist[path] = d
+			dirlist[filepath.ToSlash(path)] = d
 			if path != w.path {
 				dirlist[filepath.ToSlash(filepath.Dir(path))].Directories[d.Name] = d
 			}
@@ -119,7 +119,7 @@ func (w *Walkie) Explore() (err error) {
 	// fmt.Printf("%s", data2)
 
 	w.mu.Lock()
-	w.Directory = dirlist[w.path]
+	w.Directory = dirlist[filepath.ToSlash(w.path)]
 	w.files = w.Directory.getSubfiles()
 	w.directories = w.Directory.getSubdirs()
 	w.mu.Unlock()

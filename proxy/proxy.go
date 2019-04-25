@@ -38,12 +38,17 @@ type Proxy struct {
 }
 
 func NewProxy(path string, server_url string) (proxy *Proxy, err error) {
+	return NewProxyParams(path, server_url, 1*time.Minute, false)
+}
+
+func NewProxyParams(path string, server_url string, interval time.Duration, clean bool) (proxy *Proxy, err error) {
 	proxy = &Proxy{
 		server_url:   server_url,
 		path:         path,
 		serverdir:    walkie.Directory{},
-		SyncInterval: 1 * time.Minute,
+		SyncInterval: interval,
 		done:         make(chan bool),
+		Clean:        clean,
 	}
 
 	// proxy.m.Lock()

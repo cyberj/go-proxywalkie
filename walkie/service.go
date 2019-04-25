@@ -103,7 +103,7 @@ func (w *Walkie) Explore() (err error) {
 				return err
 			}
 
-			dirlist[filepath.Dir(path)].Files[f.Name] = f
+			dirlist[filepath.ToSlash(filepath.Dir(path))].Files[f.Name] = f
 			// data, _ := json.Marshal(f)
 			// fmt.Printf("%s", data)
 		}
@@ -207,7 +207,8 @@ func (w *Walkie) UpdateOrCreateFile(path string, r io.Reader, original_file File
 		directory = w.Directory
 	} else {
 		var ok bool
-		directory, ok = w.directories[dir]
+
+		directory, ok = w.directories[filepath.ToSlash(dir)]
 		if !ok {
 			return fmt.Errorf("UpdateOrCreateFile : Directory not found")
 		}

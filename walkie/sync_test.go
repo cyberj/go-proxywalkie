@@ -191,7 +191,7 @@ func TestCreateFile(t *testing.T) {
 	var err error
 
 	require.NoError(clean())
-	defer clean()
+	//defer clean()
 
 	// logrus.SetLevel(logrus.DebugLevel)
 

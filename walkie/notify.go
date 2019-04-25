@@ -56,7 +56,6 @@ func (w *Walkie) notify_loop() {
 
 // Start Watcher loop
 func (w *Walkie) notify_all() {
-
 	// done := make(chan bool)
 	err := w.watcher.Add(w.path)
 	if err != nil {

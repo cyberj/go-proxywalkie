@@ -33,7 +33,7 @@ func clean() (err error) {
 func TestNotify(t *testing.T) {
 	require := require.New(t)
 
-	// logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetLevel(logrus.DebugLevel)
 	logrus.Debugf("TestNotify")
 
 	defer logrus.Debugf("TestNotify - End")

@@ -17,22 +17,33 @@ type Proxy struct {
 	walkiedir *walkie.Walkie
 	serverdir walkie.Directory
 
+	// Interval between 2 server queries
+	SyncInterval time.Duration
+
+	// Clean files
+	Clean bool
+
 	server_url string
 	lastping   time.Time
 
 	serverfiles map[string]*walkie.File
-	myfiles     map[string]*walkie.File
 
 	// router *chi.Router
 	m sync.RWMutex
+
+	done    chan bool
+	running bool
 
 	path string
 }
 
 func NewProxy(path string, server_url string) (proxy *Proxy, err error) {
 	proxy = &Proxy{
-		server_url: server_url,
-		path:       path,
+		server_url:   server_url,
+		path:         path,
+		serverdir:    walkie.Directory{},
+		SyncInterval: 1 * time.Minute,
+		done:         make(chan bool),
 	}
 
 	// proxy.m.Lock()
@@ -41,60 +52,122 @@ func NewProxy(path string, server_url string) (proxy *Proxy, err error) {
 	if err != nil {
 		return
 	}
-	proxy.getServerDirectory()
 
 	proxy.walkiedir = walkiedir
 	proxy.walkiedir.Explore()
 	// time.Sleep(10 * time.Millisecond)
 
-	// First sync
-	proxy.syncDir()
-	go func() {
-		for {
-			proxy.syncDir()
-			time.Sleep(10 * time.Second)
-
-		}
-	}()
+	proxy.Run()
 
 	return
 }
 
-func (p *Proxy) Ready() {
+func (p *Proxy) Ready() bool {
 	p.m.RLock()
-	p.m.RUnlock()
+	defer p.m.RUnlock()
+	return !p.serverdir.DeepEquals(walkie.Directory{}) // eww
 }
 
-func (p *Proxy) getServerDirectory() {
+// Start server loop
+func (p *Proxy) Run() (err error) {
+	if p.running {
+		return fmt.Errorf("Already running")
+	}
+	p.done = make(chan bool)
+
+	// First tick free !
+	err = p.getServerDirectory()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	p.running = true
+
+	go func() {
+		ticker := time.NewTicker(p.SyncInterval)
+
+		for {
+			select {
+			case <-ticker.C:
+				p.getServerDirectory()
+			case <-p.done:
+				ticker.Stop()
+				p.running = false
+				return
+			}
+
+		}
+	}()
+	return
+}
+
+func (p *Proxy) Stop() {
+	if p.running {
+		close(p.done)
+
+		for p.running {
+
+		}
+	}
+}
+
+func (p *Proxy) getServerDirectory() (err error) {
 
 	res, err := http.Get(p.server_url)
 	if err != nil {
-		logrus.Errorf("Error on cache loop : %s", err)
+		err = fmt.Errorf("Error on cache loop : %s", err)
+		return
 	}
 
-	exporteddir := &walkie.Directory{}
-	err = json.NewDecoder(res.Body).Decode(exporteddir)
-
+	exporteddir := walkie.Directory{}
+	err = json.NewDecoder(res.Body).Decode(&exporteddir)
 	if err != nil {
-		logrus.Errorf("Error on cache loop decondig json : %s", err)
+		err = fmt.Errorf("Error on cache loop decondig json : %s", err)
+		return
+	}
 
+	// Change only when needed or first run
+	p.m.RLock()
+	same := p.serverdir.DeepEquals(exporteddir)
+	p.m.RUnlock()
+	if p.running && same {
+		return
 	}
 
 	p.m.Lock()
-	p.serverdir = *exporteddir
+	p.serverdir = exporteddir
 	p.serverfiles = p.serverdir.ListFiles()
 	p.m.Unlock()
+	p.syncDir()
+	if p.Clean {
+		p.cleanFiles()
+	}
+	return
 }
 
+// syncDir Adds and remove directories accordingly with server
 func (p *Proxy) syncDir() {
 	p.m.RLock()
+	defer p.m.RUnlock()
 	add, del, err := p.walkiedir.SyncDir(p.serverdir)
 	if err != nil {
-		p.m.RUnlock()
 		logrus.Error(err)
 	}
-	p.m.RUnlock()
 	logrus.Infof("syncdir : add=%v del=%v", add, del)
+
+}
+
+// cleanFiles swipe uneeded files
+func (p *Proxy) cleanFiles() {
+	p.m.RLock()
+	deleted, err := p.walkiedir.CleanFiles(p.serverdir)
+	if err != nil {
+		logrus.Errorf("cleanFiles error %s", err)
+		return
+	}
+	logrus.Infof("cleanFiles : deleted=%v", deleted)
+	p.m.RUnlock()
 
 }
 

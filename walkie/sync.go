@@ -9,7 +9,6 @@ import (
 
 // Copy directories, return number of created directories
 func (w *Walkie) CopyDir(ref Directory) (nb int, err error) {
-	defer w.Explore()
 
 	toadd, _ := w.Directory.DiffDir(ref)
 
@@ -19,6 +18,9 @@ func (w *Walkie) CopyDir(ref Directory) (nb int, err error) {
 		err2 := os.MkdirAll(path, 0755)
 		if err2 != nil {
 			logrus.Errorf("CopyDir/MkdirAll : %s", err2)
+			if nb != 0 {
+				w.Explore()
+			}
 			return
 		} else {
 			nb++
@@ -26,13 +28,14 @@ func (w *Walkie) CopyDir(ref Directory) (nb int, err error) {
 	}
 
 	logrus.Debugf("CopyDir copied nb=%d", nb)
-
+	if nb != 0 {
+		w.Explore()
+	}
 	return
 }
 
 // Delete directories, return number of changed files
 func (w *Walkie) CleanDir(ref Directory) (nb int, err error) {
-	defer w.Explore()
 
 	_, toremove := w.Directory.DiffDir(ref)
 
@@ -41,6 +44,9 @@ func (w *Walkie) CleanDir(ref Directory) (nb int, err error) {
 		logrus.Debugf("Delete %s", path)
 		err2 := os.RemoveAll(path)
 		if err2 != nil {
+			if nb != 0 {
+				w.Explore()
+			}
 			return
 		} else {
 			nb++
@@ -48,7 +54,9 @@ func (w *Walkie) CleanDir(ref Directory) (nb int, err error) {
 	}
 
 	logrus.Debugf("CleanDir deleted nb=%d", nb)
-
+	if nb != 0 {
+		w.Explore()
+	}
 	return
 }
 
@@ -68,7 +76,6 @@ func (w *Walkie) SyncDir(ref Directory) (add, del int, err error) {
 
 // Delete files, return number of changed files
 func (w *Walkie) CleanFiles(ref Directory) (nb int, err error) {
-	defer w.Explore()
 
 	_, toremove := w.Directory.DiffFiles(ref)
 
@@ -77,13 +84,18 @@ func (w *Walkie) CleanFiles(ref Directory) (nb int, err error) {
 		logrus.Debugf("Delete %s", path)
 		err2 := os.RemoveAll(path)
 		if err2 != nil {
+			if nb != 0 {
+				w.Explore()
+			}
 			return
 		} else {
 			nb++
 		}
 	}
 
-	logrus.Debugf("CleanDir deleted nb=%d", nb)
-
+	logrus.Debugf("CleanFiles deleted nb=%d", nb)
+	if nb != 0 {
+		w.Explore()
+	}
 	return
 }

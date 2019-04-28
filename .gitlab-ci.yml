@@ -30,9 +30,9 @@ test:
       - $GOPATH/src/github.com/
       - $GOPATH/bin/
   script:
-    - go fmt $(go list ./... )
-    - go vet $(go list ./... )
-    - go test -timeout=6000ms -cover -race $(go list ./...)
+    - go fmt ./...
+    - go vet ./...
+    - go test -timeout=6s -parallel 1 -cover -race ./...
 
 build-linux:
   stage: build

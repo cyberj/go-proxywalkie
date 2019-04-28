@@ -46,13 +46,13 @@ build-linux:
   script:
     - cd proxywalkie
     # - go get -u github.com/spf13/cobra
-    - go build -race -ldflags "-extldflags '-static' -s -w -X main.Version=$(git describe --tags)" -o $CI_PROJECT_DIR/proxywalkie *.go
-    - cd $CI_PROJECT_DIR
+    - go build -race -ldflags "-extldflags '-static' -s -w -X main.Version=$(git describe --tags)" -o $CI_PROJECT_DIR/proxywalkie/proxywalkie *.go
+    - cd $CI_PROJECT_DIR/proxywalkie
     - if ! [[ -f upx ]]; then wget "https://tools.ibsw.fr/public/upx" && chmod u+x ./upx; fi
     - ./upx --brute proxywalkie
   artifacts:
     paths:
-     - proxywalkie
+     - proxywalkie/proxywalkie
     name: proxywalkie-$CI_COMMIT_REF_SLUG
 
 build-windows:
@@ -66,12 +66,13 @@ build-windows:
       - $GOPATH/bin/
   script:
     - cd proxywalkie
-    # - go get -u github.com/spf13/cobra
-    - GOOS=windows GOARCH=amd64 go build -ldflags "-extldflags '-static' -s -w -X main.Version=$(git describe --tags)" -o $CI_PROJECT_DIR/proxywalkie.exe *.go
-    - cd $CI_PROJECT_DIR
+    - go get -u github.com/inconshreveable/mousetrap
+    - go get -u github.com/konsorten/go-windows-terminal-sequences
+    - GOOS=windows GOARCH=amd64 go build -ldflags "-extldflags '-static' -s -w -X main.Version=$(git describe --tags)" -o $CI_PROJECT_DIR/proxywalkie/proxywalkie.exe *.go
+    - cd $CI_PROJECT_DIR/proxywalkie
     - if ! [[ -f upx ]]; then wget "https://tools.ibsw.fr/public/upx" && chmod u+x ./upx; fi
     - ./upx --brute proxywalkie.exe
   artifacts:
     paths:
-     - proxywalkie.exe
+     - proxywalkie/proxywalkie.exe
     name: proxywalkie-$CI_COMMIT_REF_SLUG.exe

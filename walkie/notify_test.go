@@ -6,28 +6,9 @@ import (
 	"testing"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/cyberj/go-proxywalkie/testutils"
 	"github.com/stretchr/testify/require"
 )
-
-func clean() (err error) {
-	// require := require.New(t)
-	// synced_dir := filepath.Join(getTestAssetsDir(), "synced_dir")
-	parent_dir := getTestAssetsDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	err = os.RemoveAll(synced_dir)
-	if err != nil {
-		return
-	}
-	// os.RemoveAll(synced_dir)
-	err = os.MkdirAll(synced_dir, 0755)
-	if err != nil {
-		return
-	}
-
-	return
-
-}
 
 // Test File deletion
 func TestNotify(t *testing.T) {
@@ -39,25 +20,22 @@ func TestNotify(t *testing.T) {
 	defer logrus.Debugf("TestNotify - End")
 	var err error
 
-	require.NoError(clean())
-	defer clean()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	woriginal, err := NewWalkie(testdir)
+	woriginal, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	wresult, err := NewWalkie(synced_dir)
+	wresult, err := NewWalkie(testdirs.SyncedDir)
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 	wresult.Watch()
 
 	// Create two useless files/dir
-	require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
-	_, err = os.Create(filepath.Join(synced_dir, "useless_file"))
+	require.NoError(os.MkdirAll(filepath.Join(testdirs.SyncedDir, "useless_dir"), 0755))
+	_, err = os.Create(filepath.Join(testdirs.SyncedDir, "useless_file"))
 	require.NoError(err)
 
 	t.SkipNow()

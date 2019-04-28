@@ -2,22 +2,11 @@ package walkie
 
 import (
 	"encoding/json"
-	"path/filepath"
-	"runtime"
 	"testing"
 
+	"github.com/cyberj/go-proxywalkie/testutils"
 	"github.com/stretchr/testify/require"
 )
-
-func getTestDir() string {
-	return filepath.Join(getTestAssetsDir(), "complete_test")
-}
-
-func getTestAssetsDir() string {
-	_, filename, _, _ := runtime.Caller(0)
-	testdir := filepath.Join(filepath.Dir(filename), "..", "tests_assets")
-	return testdir
-}
 
 // Test unexistant path
 func TestWalkingUnknownPath(t *testing.T) {
@@ -31,8 +20,14 @@ func TestWalkingUnknownPath(t *testing.T) {
 
 func BenchmarkWalking(b *testing.B) {
 	// run the Fib function b.N times
-	testdir := getTestDir()
-	w, err := NewWalkie(testdir)
+
+	testdirs, err := testutils.NewTestDir()
+	if err != nil {
+		b.Error(err)
+	}
+	defer testdirs.Clean()
+
+	w, err := NewWalkie(testdirs.TestassetsDir)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -48,9 +43,11 @@ func BenchmarkWalking(b *testing.B) {
 // Test Directory walking
 func TestWalking(t *testing.T) {
 	require := require.New(t)
-	testdir := getTestDir()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	w, err := NewWalkie(testdir)
+	w, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	err = w.Explore()
 	require.NoError(err)

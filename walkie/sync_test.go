@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cyberj/go-proxywalkie/testutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,20 +15,15 @@ func TestCopydir(t *testing.T) {
 
 	var err error
 
-	require.NoError(clean())
-	defer clean()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	// logrus.SetLevel(logrus.DebugLevel)
-
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	woriginal, err := NewWalkie(testdir)
+	woriginal, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	wresult, err := NewWalkie(synced_dir)
+	wresult, err := NewWalkie(testdirs.SyncedDir)
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 
@@ -50,7 +46,7 @@ func TestCopydir(t *testing.T) {
 	require.Len(toadd, 0)
 	require.Len(toremove, 0)
 
-	require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
+	require.NoError(os.MkdirAll(filepath.Join(testdirs.SyncedDir, "useless_dir"), 0755))
 	// Re-check diff again
 	require.NoError(wresult.Explore())
 	toadd, toremove = wresult.Directory.DiffDir(*woriginal.Directory)
@@ -64,23 +60,20 @@ func TestDeletedir(t *testing.T) {
 
 	var err error
 
-	require.NoError(clean())
-	defer clean()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	woriginal, err := NewWalkie(testdir)
+	woriginal, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	wresult, err := NewWalkie(synced_dir)
+	wresult, err := NewWalkie(testdirs.SyncedDir)
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 
 	// require.NoError(woriginal.Directory.CopyDir(synced_dir))
-	require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
+	require.NoError(os.MkdirAll(filepath.Join(testdirs.SyncedDir, "useless_dir"), 0755))
 	require.NoError(wresult.Explore())
 
 	sourcedir := *woriginal.Directory
@@ -104,24 +97,21 @@ func TestDeleteFile(t *testing.T) {
 
 	var err error
 
-	require.NoError(clean())
-	defer clean()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	woriginal, err := NewWalkie(testdir)
+	woriginal, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	wresult, err := NewWalkie(synced_dir)
+	wresult, err := NewWalkie(testdirs.SyncedDir)
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 
 	// require.NoError(woriginal.Directory.CopyDir(synced_dir))
 	// require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
-	_, err = os.Create(filepath.Join(synced_dir, "useless_file"))
+	_, err = os.Create(filepath.Join(testdirs.SyncedDir, "useless_file"))
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 
@@ -144,21 +134,17 @@ func TestSyncdir(t *testing.T) {
 
 	var err error
 
-	require.NoError(clean())
-	defer clean()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	// logrus.SetLevel(logrus.DebugLevel)
+	require.NoError(os.MkdirAll(filepath.Join(testdirs.SyncedDir, "useless_dir"), 0755))
 
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-	require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
-
-	woriginal, err := NewWalkie(testdir)
+	woriginal, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	wresult, err := NewWalkie(synced_dir)
+	wresult, err := NewWalkie(testdirs.SyncedDir)
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 
@@ -190,21 +176,15 @@ func TestCreateFile(t *testing.T) {
 
 	var err error
 
-	require.NoError(clean())
-	//defer clean()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	// logrus.SetLevel(logrus.DebugLevel)
-
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-	// require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
-
-	woriginal, err := NewWalkie(testdir)
+	woriginal, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	wresult, err := NewWalkie(synced_dir)
+	wresult, err := NewWalkie(testdirs.SyncedDir)
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 
@@ -218,7 +198,7 @@ func TestCreateFile(t *testing.T) {
 	originalFile := woriginal.Directory.Directories["folder2"].Directories["folder_22"].Files["file_22b"]
 	require.NotNil(originalFile)
 
-	f, err := os.Open(filepath.Join(testdir, "folder2", "folder_22", "file_22b"))
+	f, err := os.Open(filepath.Join(testdirs.TestassetsDir, "folder2", "folder_22", "file_22b"))
 	require.NoError(err)
 	defer f.Close()
 	require.NoError(wresult.UpdateOrCreateFile("folder2/folder_22/file_22b", f, *originalFile))

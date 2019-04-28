@@ -5,15 +5,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cyberj/go-proxywalkie/testutils"
 	"github.com/stretchr/testify/require"
 )
 
 // Test Directory walking
 func TestCompare(t *testing.T) {
 	require := require.New(t)
-	testdir := getTestDir()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	w, err := NewWalkie(testdir)
+	w, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	err = w.Explore()
 	require.NoError(err)
@@ -72,9 +75,11 @@ func TestGetSubfiles(t *testing.T) {
 
 	var err error
 
-	testdir := getTestDir()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	woriginal, err := NewWalkie(testdir)
+	woriginal, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
@@ -105,18 +110,15 @@ func TestDiffFiles(t *testing.T) {
 	require := require.New(t)
 
 	var err error
-	require.NoError(clean())
-	defer clean()
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	woriginal, err := NewWalkie(testdir)
+	woriginal, err := NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	wresult, err := NewWalkie(synced_dir)
+	wresult, err := NewWalkie(testdirs.SyncedDir)
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 

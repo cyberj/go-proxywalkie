@@ -4,41 +4,14 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
 
 	server "github.com/cyberj/go-proxywalkie/server"
+	"github.com/cyberj/go-proxywalkie/testutils"
 	"github.com/cyberj/go-proxywalkie/walkie"
 	"github.com/stretchr/testify/require"
 )
-
-func getTestDir() string {
-	return filepath.Join(getTestAssetsDir(), "complete_test")
-}
-
-func getTestAssetsDir() string {
-	_, filename, _, _ := runtime.Caller(0)
-	testdir := filepath.Join(filepath.Dir(filename), "..", "tests_assets")
-	return testdir
-}
-
-func clean() (err error) {
-	parent_dir := getTestAssetsDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	err = os.RemoveAll(synced_dir)
-	if err != nil {
-		return
-	}
-	// os.RemoveAll(synced_dir)
-	err = os.MkdirAll(synced_dir, 0755)
-	if err != nil {
-		return
-	}
-
-	return
-}
 
 // Test File deletion
 func TestSync(t *testing.T) {
@@ -47,19 +20,15 @@ func TestSync(t *testing.T) {
 	// logrus.SetLevel(logrus.DebugLevel)
 	var err error
 
-	require.NoError(clean())
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	defer clean()
-
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	woriginal, err := walkie.NewWalkie(testdir)
+	woriginal, err := walkie.NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	srv, err := server.NewServer(testdir)
+	srv, err := server.NewServer(testdirs.TestassetsDir)
 	require.NoError(err)
 
 	ts := httptest.NewServer(srv)
@@ -67,7 +36,7 @@ func TestSync(t *testing.T) {
 
 	// ts.URL
 
-	proxy, err := NewProxy(synced_dir, ts.URL)
+	proxy, err := NewProxy(testdirs.SyncedDir, ts.URL)
 	require.NoError(err)
 
 	// grok grok...
@@ -84,7 +53,7 @@ func TestSync(t *testing.T) {
 	originalFile := woriginal.Directory.Directories["folder2"].Directories["folder_22"].Files["file_22b"]
 	require.NotNil(originalFile)
 
-	f, err := os.Open(filepath.Join(testdir, "folder2", "folder_22", "file_22b"))
+	f, err := os.Open(filepath.Join(testdirs.TestassetsDir, "folder2", "folder_22", "file_22b"))
 	require.NoError(err)
 	defer f.Close()
 
@@ -103,28 +72,24 @@ func TestSyncClean(t *testing.T) {
 	// logrus.SetLevel(logrus.DebugLevel)
 	var err error
 
-	require.NoError(clean())
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	defer clean()
-
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	woriginal, err := walkie.NewWalkie(testdir)
+	woriginal, err := walkie.NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	srv, err := server.NewServer(testdir)
+	srv, err := server.NewServer(testdirs.TestassetsDir)
 	require.NoError(err)
 
 	ts := httptest.NewServer(srv)
 	defer ts.Close()
 
-	uselessfile_path := filepath.Join(synced_dir, "useless_file")
+	uselessfile_path := filepath.Join(testdirs.SyncedDir, "useless_file")
 	_, err = os.Create(uselessfile_path)
 
-	proxy, err := NewProxy(synced_dir, ts.URL)
+	proxy, err := NewProxy(testdirs.SyncedDir, ts.URL)
 	require.NoError(err)
 
 	_, err = os.Stat(uselessfile_path)
@@ -132,6 +97,7 @@ func TestSyncClean(t *testing.T) {
 
 	// grok grok...
 	proxy.Stop()
+
 	proxy.Clean = true
 	require.NoError(proxy.Run())
 
@@ -152,19 +118,15 @@ func TestSyncBackground(t *testing.T) {
 	// logrus.SetLevel(logrus.DebugLevel)
 	var err error
 
-	require.NoError(clean())
+	testdirs, err := testutils.NewTestDir()
+	require.NoError(err)
+	defer testdirs.Clean()
 
-	defer clean()
-
-	parent_dir := getTestAssetsDir()
-	testdir := getTestDir()
-	synced_dir := filepath.Join(parent_dir, "synced_dir")
-
-	woriginal, err := walkie.NewWalkie(testdir)
+	woriginal, err := walkie.NewWalkie(testdirs.TestassetsDir)
 	require.NoError(err)
 	require.NoError(woriginal.Explore())
 
-	srv, err := server.NewServer(testdir)
+	srv, err := server.NewServer(testdirs.TestassetsDir)
 	require.NoError(err)
 
 	ts := httptest.NewServer(srv)
@@ -173,7 +135,7 @@ func TestSyncBackground(t *testing.T) {
 	// uselessfile_path := filepath.Join(synced_dir, "useless_file")
 	// _, err = os.Create(uselessfile_path)
 
-	proxy, err := NewProxyParams(synced_dir, ts.URL, 10*time.Minute, false, true)
+	proxy, err := NewProxyParams(testdirs.SyncedDir, ts.URL, 10*time.Minute, false, true)
 	require.NoError(err)
 
 	// Wait sync

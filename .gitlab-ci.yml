@@ -1,0 +1,77 @@
+image: golang:1.12
+
+stages:
+- test
+- build
+
+variables:
+  REPO_NAME: github.com/cyberj/go-proxywalkie
+  GOPATH: /go
+
+# The problem is that to be able to use go get, one needs to put
+# the repository in the $GOPATH. So for example if your gitlab domain
+# is gitlab.com, and that your repository is namespace/project, and
+# the default GOPATH being /go, then you'd need to have your
+# repository in /go/src/gitlab.com/namespace/project
+# Thus, making a symbolic link corrects this.
+before_script:
+  - mkdir -p $GOPATH/src/$(dirname $REPO_NAME)
+  - ln -svf $CI_PROJECT_DIR $GOPATH/src/$REPO_NAME
+  - cd $GOPATH/src/$REPO_NAME
+  - go get -d -v -t ./...
+
+test:
+  stage: test
+  image: golang:1.12
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      # - $GOPATH/src/$REPO_NAME/vendor/
+      - $GOPATH/src/github.com/
+      - $GOPATH/bin/
+  script:
+    - go fmt $(go list ./... )
+    - go vet $(go list ./... )
+    - go test -timeout=6000ms -cover -race $(go list ./...)
+
+build-linux:
+  stage: build
+  image: golang:1.12
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - $CI_PROJECT_DIR/upx
+      - $GOPATH/src/github.com/
+      - $GOPATH/bin/
+  script:
+    - cd proxywalkie
+    # - go get -u github.com/spf13/cobra
+    - go build -race -ldflags "-extldflags '-static' -s -w -X main.Version=$(git describe --tags)" -o $CI_PROJECT_DIR/proxywalkie *.go
+    - cd $CI_PROJECT_DIR
+    - if ! [[ -f upx ]]; then wget "https://tools.ibsw.fr/public/upx" && chmod u+x ./upx; fi
+    - ./upx --brute proxywalkie
+  artifacts:
+    paths:
+     - proxywalkie
+    name: proxywalkie-$CI_COMMIT_REF_SLUG
+
+build-windows:
+  stage: build
+  image: golang:1.12
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - $GOPATH/src/github.com/
+      - $CI_PROJECT_DIR/upx
+      - $GOPATH/bin/
+  script:
+    - cd proxywalkie
+    # - go get -u github.com/spf13/cobra
+    - GOOS=windows GOARCH=amd64 go build -ldflags "-extldflags '-static' -s -w -X main.Version=$(git describe --tags)" -o $CI_PROJECT_DIR/proxywalkie.exe *.go
+    - cd $CI_PROJECT_DIR
+    - if ! [[ -f upx ]]; then wget "https://tools.ibsw.fr/public/upx" && chmod u+x ./upx; fi
+    - ./upx --brute proxywalkie.exe
+  artifacts:
+    paths:
+     - proxywalkie.exe
+    name: proxywalkie-$CI_COMMIT_REF_SLUG.exe

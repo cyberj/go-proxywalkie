@@ -68,11 +68,11 @@ build-windows:
     - cd proxywalkie
     - go get -u github.com/inconshreveable/mousetrap
     - go get -u github.com/konsorten/go-windows-terminal-sequences
-    - GOOS=windows GOARCH=amd64 go build -ldflags "-extldflags '-static' -s -w -X main.Version=$(git describe --tags)" -o $CI_PROJECT_DIR/proxywalkie/proxywalkie.exe *.go
+    - GOOS=windows GOARCH=amd64 go build -ldflags "-extldflags '-static' -s -w -X main.Version=$(git describe --tags)" -o $CI_PROJECT_DIR/proxywalkie.exe *.go
     - cd $CI_PROJECT_DIR/proxywalkie
     - if ! [[ -f upx ]]; then wget "https://tools.ibsw.fr/public/upx" && chmod u+x ./upx; fi
     - ./upx --brute proxywalkie.exe
   artifacts:
     paths:
-     - proxywalkie/proxywalkie.exe
+     - proxywalkie.exe
     name: proxywalkie-$CI_COMMIT_REF_SLUG.exe

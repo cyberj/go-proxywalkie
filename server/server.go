@@ -139,10 +139,4 @@ func (p *Server) handleServeFile(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	w.WriteHeader(404)
-	fmt.Fprint(w, "Not found")
-
-	// http.ServeFile(w, r, )
-
-	return
 }

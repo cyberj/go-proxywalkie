@@ -63,7 +63,7 @@ func init() {
 	// will be global for your application.
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cli.yaml)")
 
-	rootCmd.PersistentFlags().StringVarP(&workdirPath, "directory", "C", "", "proxywalkie's workdir (default currect directory)")
+	rootCmd.PersistentFlags().StringVarP(&workdirPath, "directory", "C", ".", "proxywalkie's workdir")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

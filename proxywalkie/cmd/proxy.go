@@ -27,14 +27,18 @@ var proxyDelete bool
 var proxyBackground bool
 var proxySyncInterval int
 var proxyServer string
+var proxyPort string
 
 // lsCmd represents the ls command
 var proxyCmd = &cobra.Command{
-	Use:   "proxy",
-	Short: "Proxy (client) for Intuiface",
+	Use:   "proxy SERVER",
+	Short: "Proxy (client) for Intuiface. You need the full httpurl for server (like \"http://1.2.3.4:8080/\")",
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		starttime := time.Now()
+
+		proxyServer = args[0]
 
 		logrus.Infof("Initializing Proxy")
 		proxy, err := proxy.NewProxyParams(workdirPath, proxyServer, time.Duration(proxySyncInterval)*time.Minute, proxyDelete, proxyBackground)
@@ -45,7 +49,10 @@ var proxyCmd = &cobra.Command{
 		proxy.Ready()
 		logrus.Infof("Proxy ready (%s)", time.Since(starttime))
 
-		http.ListenAndServe(":8081", proxy.Router())
+		err = http.ListenAndServe(":"+proxyPort, proxy.Router())
+		if err != nil {
+			logrus.Fatal(err)
+		}
 	},
 }
 
@@ -56,7 +63,7 @@ func init() {
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	proxyCmd.PersistentFlags().StringVarP(&proxyServer, "server", "s", "", "Server url")
+	proxyCmd.PersistentFlags().StringVarP(&proxyPort, "port", "p", "8081", "Local server URL")
 	proxyCmd.PersistentFlags().BoolVarP(&proxyDelete, "delete", "d", false, "Delete files")
 	proxyCmd.PersistentFlags().BoolVarP(&proxyBackground, "background", "b", false, "Background Sync")
 	proxyCmd.PersistentFlags().IntVarP(&proxySyncInterval, "sync-interval", "u", 5, "Sync interval (in minutes)")

@@ -25,7 +25,7 @@ import (
 
 // lsCmd represents the ls command
 var serveCmd = &cobra.Command{
-	Use:   "serve",
+	Use:   "serve [:8080]",
 	Short: "Serve a path for improved proxy (server)",
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -36,7 +36,16 @@ var serveCmd = &cobra.Command{
 		}
 		logrus.Infof("Proxy ready (init: %s)", time.Since(starttime))
 
-		http.ListenAndServe(":8080", proxy)
+		listenTo := ":8080"
+		if len(args) > 0 {
+			listenTo = args[0]
+		}
+
+		err = http.ListenAndServe(listenTo, proxy)
+		if err != nil {
+			logrus.Fatal(err)
+			// os.Exit(1)
+		}
 	},
 }
 

@@ -32,12 +32,12 @@ type Proxy struct {
 	// router *chi.Router
 	m sync.RWMutex
 
-	done    chan bool
-	running bool
+	done chan bool
 
 	// List files to fetch
 	stopCh  chan bool
 	fetchCh chan string
+	// runningCh chan bool
 
 	// Local directory
 	path string
@@ -53,9 +53,9 @@ func NewProxyParams(path string, server_url string, interval time.Duration, clea
 		path:         path,
 		serverdir:    walkie.Directory{},
 		SyncInterval: interval,
-		done:         make(chan bool),
 		stopCh:       make(chan bool),
 		fetchCh:      make(chan string),
+		// runningCh:    make(chan bool),
 
 		Clean: clean,
 		Sync:  sync,
@@ -83,12 +83,30 @@ func (p *Proxy) Ready() bool {
 	return !p.serverdir.DeepEquals(walkie.Directory{}) // eww
 }
 
+func (p *Proxy) Running() bool {
+
+	if p.done == nil {
+		return false
+	}
+
+	select {
+	case <-p.done:
+		return false
+	default:
+		return true
+	}
+
+}
+
 // Start server loop
 func (p *Proxy) Run() (err error) {
-	if p.running {
+
+	if p.Running() {
 		return fmt.Errorf("Already running")
 	}
-	p.done = make(chan bool)
+
+	// Reset done State
+	doneCh := make(chan bool)
 
 	// First tick free !
 	err = p.getServerDirectory()
@@ -97,9 +115,7 @@ func (p *Proxy) Run() (err error) {
 		return
 	}
 
-	p.running = true
-
-	go func() {
+	go func(done chan bool) {
 		ticker := time.NewTicker(p.SyncInterval)
 
 		for {
@@ -111,22 +127,25 @@ func (p *Proxy) Run() (err error) {
 					logrus.Fatal("Main loop recieved empty fileid = should not append")
 				}
 				p.getFile(fileid)
-			case <-p.done:
+			case <-done:
 				ticker.Stop()
-				p.running = false
+
 				return
 			}
 
 		}
-	}()
+	}(doneCh)
+	p.done = doneCh
+
 	return
 }
 
 func (p *Proxy) Stop() {
-	if p.running {
+
+	if p.Running() {
 		close(p.done)
 
-		for p.running {
+		for p.Running() {
 
 		}
 	}
@@ -151,7 +170,7 @@ func (p *Proxy) getServerDirectory() (err error) {
 	p.m.RLock()
 	same := p.serverdir.DeepEquals(exporteddir)
 	p.m.RUnlock()
-	if p.running && same {
+	if same && p.Running() {
 		return
 	}
 
@@ -164,7 +183,7 @@ func (p *Proxy) getServerDirectory() (err error) {
 		p.cleanFiles()
 	}
 	if p.Sync {
-		p.syncFiles()
+		p.syncFiles(p.done)
 	}
 	return
 }
@@ -182,7 +201,7 @@ func (p *Proxy) syncDir() {
 }
 
 // syncFiles Lists all files to fetch and add them in event loop
-func (p *Proxy) syncFiles() {
+func (p *Proxy) syncFiles(done chan bool) {
 
 	p.m.RLock()
 	toadd, _ := p.walkiedir.Directory.DiffFiles(p.serverdir)
@@ -203,7 +222,7 @@ func (p *Proxy) syncFiles() {
 			}
 
 			select {
-			case <-p.done:
+			case <-done:
 				// close(p.tofetch)
 				return
 			case <-stopCh:

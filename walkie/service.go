@@ -150,6 +150,9 @@ func (w *Walkie) Stat() (nbdir, nbfiles int) {
 // Get files directory list
 func (w *Walkie) ListFiles() (files []string) {
 
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
 	for k := range w.files {
 		files = append(files, k)
 	}
@@ -170,6 +173,8 @@ func (w *Walkie) ListDirs() (files []string) {
 // Get a file
 func (w *Walkie) GetFile(path string) (file File, found bool) {
 
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 	f, ok := w.files[path]
 	if !ok {
 		return

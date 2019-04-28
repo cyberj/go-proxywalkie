@@ -135,9 +135,10 @@ func TestSyncClean(t *testing.T) {
 	proxy.Clean = true
 	require.NoError(proxy.Run())
 
-	for !proxy.running {
-	}
+	// for !proxy.running {
+	// }
 
+	// File must no exists
 	_, err = os.Stat(uselessfile_path)
 	require.Error(err)
 	require.True(os.IsNotExist(err))

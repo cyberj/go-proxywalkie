@@ -1,4 +1,4 @@
-image: golang:1.12
+image: golang:1.11
 
 stages:
 - test
@@ -22,7 +22,7 @@ before_script:
 
 test:
   stage: test
-  image: golang:1.12
+  image: golang:1.11
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -36,7 +36,7 @@ test:
 
 build-linux:
   stage: build
-  image: golang:1.12
+  image: golang:1.11
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -57,7 +57,7 @@ build-linux:
 
 build-windows:
   stage: build
-  image: golang:1.12
+  image: golang:1.11
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:

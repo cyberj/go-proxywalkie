@@ -61,8 +61,6 @@ func TestSync(t *testing.T) {
 	require.NoError(err)
 
 	require.True(proxy.checkFile("folder2/folder_22/file_22b"))
-
-	// require.False(proxy.checkFile("folder1/file_1a"))
 }
 
 // Test File deletion

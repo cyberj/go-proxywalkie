@@ -106,7 +106,6 @@ func (p *Proxy) Run() (err error) {
 	}
 
 	// Reset done State
-	doneCh := make(chan bool)
 
 	// First tick free !
 	err = p.getServerDirectory()
@@ -114,6 +113,7 @@ func (p *Proxy) Run() (err error) {
 		logrus.Error(err)
 		return
 	}
+	doneCh := make(chan bool)
 
 	go func(done chan bool) {
 		ticker := time.NewTicker(p.SyncInterval)

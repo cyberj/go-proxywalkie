@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -24,6 +25,8 @@ type Server struct {
 
 	walkiedir *walkie.Walkie
 	path      string
+
+	m sync.RWMutex
 }
 
 func NewServer(path string) (server *Server, err error) {
@@ -74,8 +77,10 @@ func (p *Server) cache() {
 	gzip_encoder.Flush()
 	gzip_encoder.Close()
 	if err == nil {
+		p.m.Lock()
 		p.dircache = buf.Bytes()
 		logrus.Debugf("Cache 'dircache' : before=%v after=%v", len(buf2.Bytes()), len(p.dircache))
+		p.m.Unlock()
 	}
 
 }
@@ -88,6 +93,8 @@ func (p *Server) handleServeFile(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path == "/" {
 		logrus.Info("Using cache")
+		p.m.RLock()
+		defer p.m.RUnlock()
 
 		// fallback
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -82,6 +83,7 @@ func (p *Proxy) handleServeFile(w http.ResponseWriter, r *http.Request) {
 
 	// File don't exist or is invalid
 	if !p.checkFile(path) {
+		logrus.Errorf("File %s not found", path)
 		err = p.getFile(path)
 		if err != nil {
 			w.WriteHeader(404)

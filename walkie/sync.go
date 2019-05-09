@@ -82,11 +82,12 @@ func (w *Walkie) CleanFiles(ref Directory) (nb int, err error) {
 	for _, v := range toremove {
 		path := filepath.Join(w.path, v)
 		logrus.Debugf("Delete %s", path)
-		err2 := os.RemoveAll(path)
-		if err2 != nil {
+		err = os.RemoveAll(path)
+		if err != nil {
 			if nb != 0 {
 				w.Explore()
 			}
+			logrus.Debugf("CleanFiles got error %s when trying to delete %s", err, path)
 			return
 		} else {
 			nb++

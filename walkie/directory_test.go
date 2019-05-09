@@ -71,6 +71,7 @@ func TestCompare(t *testing.T) {
 
 // Test file list
 func TestGetSubfiles(t *testing.T) {
+
 	require := require.New(t)
 
 	var err error
@@ -93,8 +94,8 @@ func TestGetSubfiles(t *testing.T) {
 	for k := range files {
 		keys = append(keys, k)
 	}
-	require.Contains(keys, filepath.Join("folder1", "file_1a"))
-	require.Contains(keys, filepath.Join("folder2", "folder_21", "file_21b"))
+	require.Contains(keys, filepath.ToSlash(filepath.Join("folder1", "file_1a")))
+	require.Contains(keys, filepath.ToSlash(filepath.Join("folder2", "folder_21", "file_21b")))
 
 	dirnb, filenb := woriginal.Stat()
 	require.Equal(4, dirnb)

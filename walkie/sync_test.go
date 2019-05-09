@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/cyberj/go-proxywalkie/testutils"
 	"github.com/stretchr/testify/require"
 )
@@ -93,8 +94,8 @@ func TestDeletedir(t *testing.T) {
 func TestDeleteFile(t *testing.T) {
 	require := require.New(t)
 
-	// logrus.SetLevel(logrus.DebugLevel)
-
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.Debug("Start test")
 	var err error
 
 	testdirs, err := testutils.NewTestDir()
@@ -111,7 +112,8 @@ func TestDeleteFile(t *testing.T) {
 
 	// require.NoError(woriginal.Directory.CopyDir(synced_dir))
 	// require.NoError(os.MkdirAll(filepath.Join(synced_dir, "useless_dir"), 0755))
-	_, err = os.Create(filepath.Join(testdirs.SyncedDir, "useless_file"))
+	f, err := os.Create(filepath.Join(testdirs.SyncedDir, "useless_file"))
+	f.Close()
 	require.NoError(err)
 	require.NoError(wresult.Explore())
 

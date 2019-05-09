@@ -85,7 +85,8 @@ func TestSyncClean(t *testing.T) {
 	defer ts.Close()
 
 	uselessfile_path := filepath.Join(testdirs.SyncedDir, "useless_file")
-	_, err = os.Create(uselessfile_path)
+	f, err := os.Create(uselessfile_path)
+	f.Close()
 
 	proxy, err := NewProxy(testdirs.SyncedDir, ts.URL)
 	require.NoError(err)

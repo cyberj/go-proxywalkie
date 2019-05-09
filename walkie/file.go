@@ -49,10 +49,22 @@ func NewFile(path string, info os.FileInfo) (f *File, err error) {
 // Equals check if File f == file x
 func (f File) Equals(x File) bool {
 
-	if f.Name == x.Name && f.Mtime.Equal(x.Mtime) && f.Size == x.Size && f.SHA256 == x.SHA256 {
-		return true
+	err := f.Compare(x)
+	if err != nil {
+		return false
 	}
-	return false
+
+	return true
+}
+
+// Compare check if File f == file x and return an error
+func (f File) Compare(x File) (err error) {
+
+	if f.Name == x.Name && f.Mtime.Equal(x.Mtime) && f.Size == x.Size && f.SHA256 == x.SHA256 {
+		return
+	}
+
+	return FileCompareError{origin: f, other: x}
 }
 
 // copy fileinfo

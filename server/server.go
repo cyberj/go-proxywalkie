@@ -30,6 +30,8 @@ type Server struct {
 }
 
 func NewServer(path string) (server *Server, err error) {
+	logrus.Debug("Creating a new server")
+
 	server = &Server{Router: chi.NewRouter(), path: path}
 
 	walkiedir, err := walkie.NewWalkie(path)
@@ -46,6 +48,7 @@ func NewServer(path string) (server *Server, err error) {
 	server.Use(middleware.Recoverer)
 	// server.Use(middleware.DefaultCompress)
 
+	server.Get("/_files", server.handleFileList)
 	server.HandleFunc("/", server.handleServeFile)
 	server.HandleFunc("/*", server.handleServeFile)
 
@@ -79,7 +82,7 @@ func (p *Server) cache() {
 	if err == nil {
 		p.m.Lock()
 		p.dircache = buf.Bytes()
-		logrus.Debugf("Cache 'dircache' : before=%v after=%v", len(buf2.Bytes()), len(p.dircache))
+		logrus.Debugf("Gzip cache 'dircache' : before=%vb after=%vb", len(buf2.Bytes()), len(p.dircache))
 		p.m.Unlock()
 	}
 
@@ -87,9 +90,8 @@ func (p *Server) cache() {
 
 func (p *Server) handleServeFile(w http.ResponseWriter, r *http.Request) {
 
-	logrus.Debugf("%s", r.URL)
 	path := chi.URLParam(r, "*")
-	logrus.Debugf("%s", path)
+	logrus.Debugf("URL='%s', Path='%s'", r.URL, path)
 
 	if r.URL.Path == "/" {
 		logrus.Info("Using cache")
@@ -144,6 +146,14 @@ func (p *Server) handleServeFile(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 
+	}
+
+}
+
+func (p *Server) handleFileList(w http.ResponseWriter, r *http.Request) {
+
+	for _, filepath := range p.walkiedir.ListFiles() {
+		fmt.Fprintln(w, filepath)
 	}
 
 }

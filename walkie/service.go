@@ -66,6 +66,7 @@ func NewWalkie(path string) (walkie *Walkie, err error) {
 
 // Explore Directory to make filemap
 func (w *Walkie) Explore() (err error) {
+	logrus.Debug("Exploring filesystem")
 
 	dirlist := map[string]*Directory{}
 

@@ -59,9 +59,11 @@ func (p *Proxy) handleServerCache(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) handleServeFile(w http.ResponseWriter, r *http.Request) {
 	var err error
 
-	// logrus.Infof("%s", r.URL)
 	path := chi.URLParam(r, "*")
-	// logrus.Infof("%s", path)
+
+	if r.Method != http.MethodGet {
+		return
+	}
 
 	// Don't show directories
 	if strings.HasSuffix(path, "/") {
@@ -77,18 +79,18 @@ func (p *Proxy) handleServeFile(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Not found")
 	}
 
-	if r.Method != http.MethodGet {
-		return
-	}
-
 	// File don't exist or is invalid
 	if !p.checkFile(path) {
-		logrus.Errorf("File %s not found", path)
+		logrus.Infof("File %s not found or invalid", path)
 		err = p.getFile(path)
+
 		if err != nil {
 			w.WriteHeader(404)
-			fmt.Fprint(w, "Not found")
+			fmt.Fprint(w, "Not found on server")
 		}
+	} else {
+		logrus.Debugf("File %s hit cache", path)
+		w.Header().Add("X-ProxyWalkie-Cached", "true")
 	}
 
 	http.ServeFile(w, r, filepath.Join(p.path, path))

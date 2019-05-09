@@ -22,7 +22,8 @@ type Proxy struct {
 
 	// Clean files
 	Clean bool
-	Sync  bool
+	// Background sync
+	Sync bool
 
 	server_url string
 	lastping   time.Time
@@ -34,8 +35,9 @@ type Proxy struct {
 
 	done chan bool
 
-	// List files to fetch
-	stopCh  chan bool
+	// Chan to stop file checking
+	stopCh chan bool
+	// chan to transmit file to fetch
 	fetchCh chan string
 	// runningCh chan bool
 
@@ -43,10 +45,12 @@ type Proxy struct {
 	path string
 }
 
+// NewProxy is the default call to create a proxy
 func NewProxy(path string, server_url string) (proxy *Proxy, err error) {
 	return NewProxyParams(path, server_url, 1*time.Minute, false, false)
 }
 
+// NewProxyParams is the customizable function
 func NewProxyParams(path string, server_url string, interval time.Duration, clean bool, sync bool) (proxy *Proxy, err error) {
 	proxy = &Proxy{
 		server_url:   server_url,
@@ -179,9 +183,12 @@ func (p *Proxy) getServerDirectory() (err error) {
 	p.serverfiles = p.serverdir.ListFiles()
 	p.m.Unlock()
 	p.syncDir()
+
+	// Clean files if needed
 	if p.Clean {
 		p.cleanFiles()
 	}
+	// Sync files in background
 	if p.Sync {
 		p.syncFiles(p.done)
 	}
@@ -278,7 +285,7 @@ func (p *Proxy) getFile(fileid string) (err error) {
 
 }
 
-// Check if file exists
+// Check if local cache of that file is valid
 func (p *Proxy) checkFile(filepath string) (ok bool) {
 	srvfile, ok := p.findFileSrv(filepath)
 	if !ok {
@@ -290,8 +297,13 @@ func (p *Proxy) checkFile(filepath string) (ok bool) {
 		return false
 	}
 
-	return myfile.Equals(*srvfile)
+	err := myfile.Compare(*srvfile)
+	if err != nil {
+		logrus.Infof("File '%s' raised a FileCompareError : %s", filepath, err.Error())
+		return
+	}
 
+	return true
 }
 
 // Check if file exists on serveur list

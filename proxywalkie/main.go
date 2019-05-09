@@ -16,6 +16,9 @@ package main
 
 import "github.com/cyberj/go-proxywalkie/proxywalkie/cmd"
 
+var Version = "X.X.X"
+
 func main() {
+	cmd.SetVersion(Version)
 	cmd.Execute()
 }

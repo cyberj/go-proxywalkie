@@ -1,7 +1,13 @@
 go-proxywalkie
 ==============
 
-Explore and share a filepath
+Explore and share a filepath.
+
+Was asked for a `proxy` cache for a proprietary app on windows. This cache must be able to serve files from another (linux) server, cache them, invalidate the cache when needed and be able to launch a background sync if needed. All in HTTP(s).
+
+So the linux `server` watch a directory structure, and serve it after some SHA256 sums.
+
+Much of groking, but fun project to introduce new developpers to Golang.
 
 
 ## Configure server
@@ -43,7 +49,7 @@ Global Flags:
 
 ```
 
-Example : 
+Example :
 
 `proxywalkie proxy -C /path/to/directory/to/sync --delete -b "http://IP.SE.RV.ER:8080/`
 

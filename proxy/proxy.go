@@ -115,7 +115,6 @@ func (p *Proxy) Run() (err error) {
 	err = p.getServerDirectory()
 	if err != nil {
 		logrus.Error(err)
-		return
 	}
 	doneCh := make(chan bool)
 
@@ -261,7 +260,7 @@ func (p *Proxy) getFile(fileid string) (err error) {
 
 	srvfile, ok := p.findFileSrv(fileid)
 	if !ok {
-		return fmt.Errorf("Unknow file")
+		return fmt.Errorf("Unknown file")
 	}
 
 	// logrus.Error(p.server_url, fileid)
@@ -301,6 +300,17 @@ func (p *Proxy) checkFile(filepath string) (ok bool) {
 	if err != nil {
 		logrus.Infof("File '%s' raised a FileCompareError : %s", filepath, err.Error())
 		return
+	}
+
+	return true
+}
+
+// Check if local cache of that file exists
+func (p *Proxy) checkLocalFile(filepath string) (ok bool) {
+
+	_, ok = p.walkiedir.GetFile(filepath)
+	if !ok {
+		return false
 	}
 
 	return true

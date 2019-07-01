@@ -69,14 +69,30 @@ func (p *Proxy) handleServeFile(w http.ResponseWriter, r *http.Request) {
 	if strings.HasSuffix(path, "/") {
 		w.WriteHeader(404)
 		fmt.Fprint(w, "Not found")
+		return
+	}
 
+	// Special mode where we were unable to reach our server
+	nulltime := time.Time{}
+	if p.lastping == nulltime {
+		if p.checkLocalFile(path) {
+			w.Header().Add("X-ProxyWalkie-Cached", "true")
+			// The file is in cache but we are not sure abobut it being correct
+			// because we are unable to reach the server
+			w.Header().Add("X-ProxyWalkie-Local", "true")
+			http.ServeFile(w, r, filepath.Join(p.path, path))
+			return
+		}
 	}
 
 	// File not found on server
 	_, ok := p.findFileSrv(path)
 	if !ok {
+
 		w.WriteHeader(404)
 		fmt.Fprint(w, "Not found")
+		return
+
 	}
 
 	// File don't exist or is invalid

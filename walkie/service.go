@@ -120,10 +120,10 @@ func (w *Walkie) Explore() (err error) {
 	// fmt.Printf("%s", data2)
 
 	w.mu.Lock()
+	defer w.mu.Unlock()
 	w.Directory = dirlist[filepath.ToSlash(w.path)]
 	w.files = w.Directory.getSubfiles()
 	w.directories = w.Directory.getSubdirs()
-	w.mu.Unlock()
 	// data2, _ := json.Marshal(w.Directory)
 	// fmt.Printf("%s", data2)
 
@@ -187,12 +187,12 @@ func (w *Walkie) GetFile(path string) (file File, found bool) {
 // Get a directory
 func (w *Walkie) GetDir(path string) (dir Directory, found bool) {
 	w.mu.RLock()
+	defer w.mu.RUnlock()
 
 	d, ok := w.directories[path]
 	if !ok {
 		return
 	}
-	w.mu.RUnlock()
 
 	return *d, true
 }

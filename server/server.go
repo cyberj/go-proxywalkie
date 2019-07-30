@@ -84,8 +84,10 @@ func NewServerParams(path string, interval time.Duration) (server *Server, err e
 		for {
 			select {
 			case <-ticker.C:
+				t := time.Now()
 				server.walkiedir.Explore()
 				server.cache()
+				logrus.Debugf("Explore+Cache done in %s", time.Since(t))
 			}
 		}
 	}(server)

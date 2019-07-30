@@ -174,6 +174,7 @@ func (p *Proxy) getServerDirectory() (err error) {
 	same := p.serverdir.DeepEquals(exporteddir)
 	p.m.RUnlock()
 	if same && p.Running() {
+		logrus.Info("getServerDirectory : No changes detected")
 		return
 	}
 

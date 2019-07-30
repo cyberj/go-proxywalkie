@@ -14,6 +14,9 @@
 
 package cmd
 
+var serverSyncInterval int
+
+
 import (
 	"net/http"
 	"time"
@@ -30,7 +33,7 @@ var serveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		starttime := time.Now()
-		proxy, err := server.NewServerParams(workdirPath, time.Duration(proxySyncInterval)*time.Minute)
+		proxy, err := server.NewServerParams(workdirPath, time.Duration(serverSyncInterval)*time.Minute)
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -52,7 +55,7 @@ var serveCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(serveCmd)
 
-	proxyCmd.Flags().IntVarP(&proxySyncInterval, "sync-interval", "u", 10, "Sync interval (in minutes)")
+	proxyCmd.Flags().IntVarP(&serverSyncInterval, "refresh-interval", "r", 10, "Refresh interval (in minutes)")
 
 	// Here you will define your flags and configuration settings.
 

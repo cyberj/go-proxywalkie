@@ -54,7 +54,7 @@ var serveCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(serveCmd)
 
-	proxyCmd.Flags().IntVarP(&serverSyncInterval, "refresh-interval", "r", 10, "Refresh interval (in minutes)")
+	rootCmd.Flags().IntVarP(&serverSyncInterval, "refresh-interval", "r", 10, "Refresh interval (in minutes)")
 
 	// Here you will define your flags and configuration settings.
 

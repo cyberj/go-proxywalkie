@@ -47,7 +47,10 @@ var rootCmd = &cobra.Command{
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		logrus.SetLevel(logrus.DebugLevel)
+
+		if debugMode {
+			logrus.SetLevel(logrus.DebugLevel)
+		}
 	},
 }
 

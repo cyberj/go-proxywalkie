@@ -24,7 +24,7 @@ type ClientPingItemJson struct {
 }
 
 type ClientPingJson struct {
-	List []ClientPingItemJson `json:"lastcheck_seconds"`
+	List []ClientPingItemJson `json:"list"`
 }
 
 type Server struct {

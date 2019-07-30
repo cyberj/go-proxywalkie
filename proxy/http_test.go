@@ -94,4 +94,12 @@ func TestHTTPOffline(t *testing.T) {
 	require.NoError(err)
 	require.Equal(200, res.StatusCode)
 	require.Equal("true", res.Header.Get("X-ProxyWalkie-Cached"))
+
+	// Test Status page
+	req, err = http.NewRequest("GET", tsproxy.URL+"/_cache/", nil)
+	require.NoError(err)
+	res, err = client.Do(req)
+	require.NoError(err)
+	require.Equal(200, res.StatusCode)
+	// require.Equal("true", res.Header.Get("X-ProxyWalkie-Cached"))
 }

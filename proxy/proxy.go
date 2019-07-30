@@ -235,7 +235,9 @@ func (p *Proxy) syncFiles(done chan bool) {
 				return
 			default:
 			}
+			logrus.Debugf("syncFiles : Add new file to check : %s", v)
 			p.fetchCh <- v
+			logrus.Debugf("syncFiles : Done added new file to check : %s", v)
 
 		}
 	}(toadd)
@@ -299,7 +301,7 @@ func (p *Proxy) checkFile(filepath string) (ok bool) {
 	err := myfile.Compare(*srvfile)
 	if err != nil {
 		logrus.Infof("File '%s' raised a FileCompareError : %s", filepath, err.Error())
-		return
+		return false
 	}
 
 	return true

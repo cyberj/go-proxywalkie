@@ -32,7 +32,27 @@ func (p *Proxy) Router() http.Handler {
 }
 
 func (p *Proxy) handleStatus(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Last ping : %s", time.Since(p.lastping))
+
+	data := struct {
+		LastPing  time.Duration `json:"name"`
+		Running   bool          `json:"running"`
+		ServerURL string        `json:"server_url"`
+		LocalPath string        `json:"local_path"`
+	}{
+		time.Since(p.lastping),
+		p.Running(),
+		p.server_url,
+		p.path,
+	}
+
+	json, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+
+	fmt.Fprint(w, json)
+
 	return
 }
 

@@ -123,6 +123,8 @@ func (p *Proxy) Run() (err error) {
 		ticker := time.NewTicker(p.SyncInterval)
 		// Ping timer
 		ticker2 := time.NewTicker(5 * time.Minute)
+		// First ping free !
+		p.pingServer()
 
 		for {
 			select {

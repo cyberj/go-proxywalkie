@@ -63,10 +63,10 @@ func init() {
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	proxyCmd.PersistentFlags().StringVarP(&proxyPort, "port", "p", "8081", "Local server URL")
-	proxyCmd.PersistentFlags().BoolVarP(&proxyDelete, "delete", "d", false, "Delete files")
-	proxyCmd.PersistentFlags().BoolVarP(&proxyBackground, "background", "b", false, "Background Sync")
-	proxyCmd.PersistentFlags().IntVarP(&proxySyncInterval, "sync-interval", "u", 5, "Sync interval (in minutes)")
+	proxyCmd.Flags().StringVarP(&proxyPort, "port", "p", "8081", "Local server URL")
+	proxyCmd.Flags().BoolVarP(&proxyDelete, "delete", "d", false, "Delete files")
+	proxyCmd.Flags().BoolVarP(&proxyBackground, "background", "b", false, "Background Sync")
+	proxyCmd.Flags().IntVarP(&proxySyncInterval, "sync-interval", "u", 5, "Sync interval (in minutes)")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

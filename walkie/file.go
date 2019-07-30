@@ -61,6 +61,7 @@ func (f File) Equals(x File) bool {
 func (f File) Compare(x File) (err error) {
 
 	if f.Name == x.Name && f.Mtime.Round(time.Second).Equal(x.Mtime.Round(time.Second)) && f.Size == x.Size && f.SHA256 == x.SHA256 {
+		// if f.Name == x.Name && f.Mtime.Equal(x.Mtime) && f.Size == x.Size && f.SHA256 == x.SHA256 {
 		return
 	}
 

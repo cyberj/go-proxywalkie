@@ -54,7 +54,7 @@ func TestCompare(t *testing.T) {
 
 	// Change a bit then test
 	d3.Files["file_1a"] = d3.Files["file_1a"].copy()
-	d3.Files["file_1a"].Mtime = time.Now()
+	d3.Files["file_1a"].Mtime = time.Now().Add(4 * time.Minute)
 	//
 	require.NotEqual(d3.Files["file_1a"].Mtime, d1.Files["file_1a"].Mtime)
 	require.False(d1.DeepEquals(*d3))

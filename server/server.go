@@ -72,7 +72,7 @@ func NewServerParams(path string, interval time.Duration) (server *Server, err e
 	server.Get("/_files", server.handleFileList)
 	server.Get("/ping", server.handlePing)
 	server.Get("/_clients", server.handleClientList)
-	server.HandleFunc("/", server.handleServeFile)
+	server.HandleFunc("/$", server.handleServeFile)
 	server.HandleFunc("/*", server.handleServeFile)
 
 	// Cache first

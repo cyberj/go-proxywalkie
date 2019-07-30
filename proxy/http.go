@@ -51,7 +51,7 @@ func (p *Proxy) handleStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprint(w, json)
+	fmt.Fprintf(w, "%s", json)
 
 	return
 }

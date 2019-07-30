@@ -34,12 +34,12 @@ func (p *Proxy) Router() http.Handler {
 func (p *Proxy) handleStatus(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
-		LastPing  time.Duration `json:"name"`
-		Running   bool          `json:"running"`
-		ServerURL string        `json:"server_url"`
-		LocalPath string        `json:"local_path"`
+		LastPing  int    `json:"lastcheck_seconds"`
+		Running   bool   `json:"running"`
+		ServerURL string `json:"server_url"`
+		LocalPath string `json:"local_path"`
 	}{
-		time.Since(p.lastping),
+		int(time.Since(p.lastping).Seconds()),
 		p.Running(),
 		p.server_url,
 		p.path,

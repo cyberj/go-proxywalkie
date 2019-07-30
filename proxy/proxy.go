@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -120,11 +121,15 @@ func (p *Proxy) Run() (err error) {
 
 	go func(done chan bool) {
 		ticker := time.NewTicker(p.SyncInterval)
+		// Ping timer
+		ticker2 := time.NewTicker(5 * time.Minute)
 
 		for {
 			select {
 			case <-ticker.C:
 				p.getServerDirectory()
+			case <-ticker2.C:
+				p.pingServer()
 			case fileid := <-p.fetchCh:
 				if fileid == "" {
 					logrus.Fatal("Main loop recieved empty fileid = should not append")
@@ -132,6 +137,7 @@ func (p *Proxy) Run() (err error) {
 				p.getFile(fileid)
 			case <-done:
 				ticker.Stop()
+				ticker2.Stop()
 
 				return
 			}
@@ -139,6 +145,34 @@ func (p *Proxy) Run() (err error) {
 		}
 	}(doneCh)
 	p.done = doneCh
+
+	return
+}
+
+func (p *Proxy) pingServer() {
+
+	client := &http.Client{
+		Timeout: 1 * time.Minute,
+	}
+
+	// res, err := http.Get(p.server_url + "/ping")
+	req, err := http.NewRequest("GET", p.server_url+"/ping", nil)
+	if err != nil {
+		err = fmt.Errorf("Error on ping loop : %s", err)
+		return
+	}
+
+	// Get Hostname
+	hostname, err := os.Hostname()
+	if err == nil {
+		req.Header.Add("X-ProxyWalkie-Hostname", hostname)
+	}
+
+	_, err = client.Do(req)
+	if err != nil {
+		err = fmt.Errorf("Error on ping loop : %s", err)
+		return
+	}
 
 	return
 }

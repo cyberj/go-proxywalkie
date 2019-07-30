@@ -18,6 +18,15 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
+type ClientPingItemJson struct {
+	Hostname string `json:"hostname"`
+	LastPing int64  `json:"lastping_seconds"`
+}
+
+type ClientPingJson struct {
+	List []ClientPingItemJson `json:"lastcheck_seconds"`
+}
+
 type Server struct {
 	chi.Router
 
@@ -30,6 +39,10 @@ type Server struct {
 	path      string
 
 	m sync.RWMutex
+
+	// Watchdog for clients with his mutex
+	clientpinglist map[string]time.Time
+	clientMu       sync.RWMutex
 }
 
 // NewProxy is the default call to create a proxy
@@ -40,7 +53,7 @@ func NewServer(path string) (server *Server, err error) {
 func NewServerParams(path string, interval time.Duration) (server *Server, err error) {
 	logrus.Debug("Creating a new server")
 
-	server = &Server{Router: chi.NewRouter(), path: path, SyncInterval: interval}
+	server = &Server{Router: chi.NewRouter(), path: path, SyncInterval: interval, clientpinglist: map[string]time.Time{}}
 
 	walkiedir, err := walkie.NewWalkie(path)
 	if err != nil {
@@ -57,6 +70,8 @@ func NewServerParams(path string, interval time.Duration) (server *Server, err e
 	// server.Use(middleware.DefaultCompress)
 
 	server.Get("/_files", server.handleFileList)
+	server.Get("/ping", server.handlePing)
+	server.Get("/_clients", server.handleClientList)
 	server.HandleFunc("/", server.handleServeFile)
 	server.HandleFunc("/*", server.handleServeFile)
 
@@ -168,5 +183,44 @@ func (p *Server) handleFileList(w http.ResponseWriter, r *http.Request) {
 	for _, filepath := range p.walkiedir.ListFiles() {
 		fmt.Fprintln(w, filepath)
 	}
+
+}
+
+// handlePing registers someone in cache list
+func (p *Server) handlePing(w http.ResponseWriter, r *http.Request) {
+
+	hostname := r.Header.Get("X-ProxyWalkie-Hostname")
+	if hostname == "" {
+		w.WriteHeader(400)
+		fmt.Fprint(w, "Missing ProxyWalkie Header")
+		return
+	}
+
+	p.clientMu.Lock()
+	p.clientpinglist[hostname] = time.Now()
+	p.clientMu.Unlock()
+
+	return
+
+}
+
+// handleClientList is a Convenient list to check if someone didn't respond for a long time...
+func (p *Server) handleClientList(w http.ResponseWriter, r *http.Request) {
+
+	data := ClientPingJson{}
+
+	p.clientMu.RLock()
+	for key, val := range p.clientpinglist {
+		data.List = append(data.List, ClientPingItemJson{Hostname: key, LastPing: int64(time.Since(val).Seconds())})
+	}
+	p.clientMu.RUnlock()
+
+	json, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+
+	fmt.Fprintf(w, "%s", json)
 
 }

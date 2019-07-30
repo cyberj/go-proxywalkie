@@ -14,9 +14,6 @@
 
 package cmd
 
-var serverSyncInterval int
-
-
 import (
 	"net/http"
 	"time"
@@ -25,6 +22,8 @@ import (
 	server "github.com/cyberj/go-proxywalkie/server"
 	"github.com/spf13/cobra"
 )
+
+var serverSyncInterval int
 
 // lsCmd represents the ls command
 var serveCmd = &cobra.Command{

@@ -23,16 +23,24 @@ type Server struct {
 
 	dircache []byte
 
+	// Interval between 2 server queries
+	SyncInterval time.Duration
+
 	walkiedir *walkie.Walkie
 	path      string
 
 	m sync.RWMutex
 }
 
+// NewProxy is the default call to create a proxy
 func NewServer(path string) (server *Server, err error) {
+	return NewServerParams(path, 10*time.Minute)
+}
+
+func NewServerParams(path string, interval time.Duration) (server *Server, err error) {
 	logrus.Debug("Creating a new server")
 
-	server = &Server{Router: chi.NewRouter(), path: path}
+	server = &Server{Router: chi.NewRouter(), path: path, SyncInterval: interval}
 
 	walkiedir, err := walkie.NewWalkie(path)
 	if err != nil {
@@ -56,9 +64,14 @@ func NewServer(path string) (server *Server, err error) {
 	server.cache()
 
 	go func(server *Server) {
+		ticker := time.NewTicker(server.SyncInterval)
+
 		for {
-			time.Sleep(10 * time.Second)
-			server.cache()
+			select {
+			case <-ticker.C:
+				server.walkiedir.Explore()
+				server.cache()
+			}
 		}
 	}(server)
 

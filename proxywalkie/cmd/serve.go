@@ -30,7 +30,7 @@ var serveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		starttime := time.Now()
-		proxy, err := server.NewServer(workdirPath)
+		proxy, err := server.NewServerParams(workdirPath, time.Duration(proxySyncInterval)*time.Minute)
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -51,6 +51,8 @@ var serveCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
+
+	proxyCmd.PersistentFlags().IntVarP(&proxySyncInterval, "sync-interval", "u", 10, "Sync interval (in minutes)")
 
 	// Here you will define your flags and configuration settings.
 

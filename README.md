@@ -34,6 +34,8 @@ You can check if proxy is running at http://127.0.0.1:8080/ or http://YO.UR.SRV.
 ## Configure proxy
 
 ```
+Proxy (client) for Intuiface. You need the full httpurl for server (like "http://1.2.3.4:8080/")
+
 Usage:
   proxywalkie proxy SERVER [flags]
 
@@ -41,12 +43,14 @@ Flags:
   -b, --background          Background Sync
   -d, --delete              Delete files
   -h, --help                help for proxy
+  -i, --ping-interval int   Ping interval (in minutes) (default 5)
   -p, --port string         Local server URL (default "8081")
   -u, --sync-interval int   Sync interval (in minutes) (default 5)
 
 Global Flags:
-  -C, --directory string   proxywalkie's workdir (default current directory) (default ".")
-
+      --config string      config file
+  -D, --debug              Debug mode
+  -C, --directory string   proxywalkie's workdir (default ".")
 ```
 
 Example :
@@ -54,3 +58,9 @@ Example :
 `proxywalkie proxy -C /path/to/directory/to/sync --delete -b "http://IP.SE.RV.ER:8080/`
 
 The proxy will be ready at http://127.0.0.1:8081/ or http://YO.UR.SRV.IP:8080/
+
+## Config file
+
+You can use a config file like :
+
+`proxywalkie proxy --config proxywalkie-config.toml`

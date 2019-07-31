@@ -21,11 +21,15 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/cyberj/go-proxywalkie/proxy"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	toml "github.com/pelletier/go-toml"
 )
 
 var proxyDelete bool
 var proxyBackground bool
 var proxySyncInterval int
+var proxyPingInterval int
 var proxyServer string
 var proxyPort string
 
@@ -33,15 +37,28 @@ var proxyPort string
 var proxyCmd = &cobra.Command{
 	Use:   "proxy SERVER",
 	Short: "Proxy (client) for Intuiface. You need the full httpurl for server (like \"http://1.2.3.4:8080/\")",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.MinimumNArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		starttime := time.Now()
 
-		proxyServer = args[0]
+		if len(args) == 0 {
+			if !viper.InConfig("server") {
+				logrus.Fatalf("Need server URL")
+
+			}
+			tree, err := toml.LoadFile(viper.ConfigFileUsed())
+			if err != nil {
+				logrus.Fatalf("Config File Error")
+			}
+
+			proxyServer = tree.Get("server").(string)
+		} else {
+			proxyServer = args[0]
+		}
 
 		logrus.Infof("Initializing Proxy")
-		proxy, err := proxy.NewProxyParams(workdirPath, proxyServer, time.Duration(proxySyncInterval)*time.Minute, proxyDelete, proxyBackground)
+		proxy, err := proxy.NewProxyParams(workdirPath, proxyServer, time.Duration(proxySyncInterval)*time.Minute, time.Duration(proxyPingInterval)*time.Minute, proxyDelete, proxyBackground)
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -58,7 +75,7 @@ var proxyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(proxyCmd)
-
+	// viper.SetConfigName("proxywalkie-config") // name of config file (without extension)
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
@@ -67,6 +84,7 @@ func init() {
 	proxyCmd.Flags().BoolVarP(&proxyDelete, "delete", "d", false, "Delete files")
 	proxyCmd.Flags().BoolVarP(&proxyBackground, "background", "b", false, "Background Sync")
 	proxyCmd.Flags().IntVarP(&proxySyncInterval, "sync-interval", "u", 5, "Sync interval (in minutes)")
+	proxyCmd.Flags().IntVarP(&proxyPingInterval, "ping-interval", "i", 5, "Ping interval (in minutes)")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

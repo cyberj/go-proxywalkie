@@ -1,0 +1,21 @@
+# [proxy]
+# Local port to serve
+port = "8081"
+
+# Remote server URL
+server = "http://some:8080"
+
+# Delete files if they are not on server
+delete = true
+
+# Fetches files in background
+background = true
+
+# Ask server for directory sync interval (in minutes)
+sync-interval = 5
+
+# Interval between 2 server ping (in minutes)
+ping-interval = 5
+
+# Debug mode
+debug = false

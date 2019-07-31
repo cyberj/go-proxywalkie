@@ -20,6 +20,8 @@ type Proxy struct {
 
 	// Interval between 2 server queries
 	SyncInterval time.Duration
+	// Interval between 2 server pings
+	PingInterval time.Duration
 
 	// Clean files
 	Clean bool
@@ -48,16 +50,17 @@ type Proxy struct {
 
 // NewProxy is the default call to create a proxy
 func NewProxy(path string, server_url string) (proxy *Proxy, err error) {
-	return NewProxyParams(path, server_url, 1*time.Minute, false, false)
+	return NewProxyParams(path, server_url, 1*time.Minute, 5*time.Minute, false, false)
 }
 
 // NewProxyParams is the customizable function
-func NewProxyParams(path string, server_url string, interval time.Duration, clean bool, sync bool) (proxy *Proxy, err error) {
+func NewProxyParams(path string, server_url string, interval time.Duration, pinginterval time.Duration, clean bool, sync bool) (proxy *Proxy, err error) {
 	proxy = &Proxy{
 		server_url:   server_url,
 		path:         path,
 		serverdir:    walkie.Directory{},
 		SyncInterval: interval,
+		PingInterval: pinginterval,
 		stopCh:       make(chan bool),
 		fetchCh:      make(chan string),
 		// runningCh:    make(chan bool),
@@ -122,7 +125,7 @@ func (p *Proxy) Run() (err error) {
 	go func(done chan bool) {
 		ticker := time.NewTicker(p.SyncInterval)
 		// Ping timer
-		ticker2 := time.NewTicker(5 * time.Minute)
+		ticker2 := time.NewTicker(p.PingInterval)
 		// First ping free !
 		p.pingServer()
 

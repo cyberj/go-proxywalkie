@@ -25,6 +25,7 @@ import (
 	"os"
 
 	"github.com/Sirupsen/logrus"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -75,6 +76,8 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&debugMode, "debug", "D", false, "Debug mode")
 
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
+
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -82,26 +85,36 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	// if cfgFile != "" {
-	// 	// Use config file from the flag.
-	// 	viper.SetConfigFile(cfgFile)
-	// } else {
-	// 	// Find home directory.
-	// 	home, err := homedir.Dir()
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		os.Exit(1)
-	// 	}
-	//
-	// 	// Search config in home directory with name ".cli" (without extension).
-	// 	viper.AddConfigPath(home)
-	// 	viper.SetConfigName(".cli")
-	// }
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Find home directory.
+		home, err := homedir.Dir()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		// Search config in home directory with name ".cli" (without extension).
+		viper.AddConfigPath(home)
+		viper.SetConfigName("proxywalkie-config.toml")
+	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
+	// // If a config file is found, read it in.
+	// if err := viper.ReadInConfig(); err == nil {
+	// 	fmt.Println("Using config file:", viper.ConfigFileUsed())
+	// }
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found; ignore error if desired
+		} else {
+			// Config file was found but another error was produced
+		}
+	} else {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 }

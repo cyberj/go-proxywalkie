@@ -134,7 +134,7 @@ func TestSyncBackground(t *testing.T) {
 	// uselessfile_path := filepath.Join(synced_dir, "useless_file")
 	// _, err = os.Create(uselessfile_path)
 
-	proxy, err := NewProxyParams(testdirs.SyncedDir, ts.URL, 10*time.Minute, false, true)
+	proxy, err := NewProxyParams(testdirs.SyncedDir, ts.URL, 10*time.Minute, 10*time.Minute, false, true)
 	require.NoError(err)
 
 	// Wait sync

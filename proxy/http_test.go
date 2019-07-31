@@ -38,7 +38,7 @@ func TestHTTPBackground(t *testing.T) {
 	// uselessfile_path := filepath.Join(synced_dir, "useless_file")
 	// _, err = os.Create(uselessfile_path)
 
-	proxy, err := NewProxyParams(testdirs.SyncedDir, ts.URL, 10*time.Minute, false, false)
+	proxy, err := NewProxyParams(testdirs.SyncedDir, ts.URL, 10*time.Minute, 10*time.Minute, false, false)
 	require.NoError(err)
 
 	tsproxy := httptest.NewServer(proxy.Router())
@@ -79,7 +79,7 @@ func TestHTTPOffline(t *testing.T) {
 	// uselessfile_path := filepath.Join(synced_dir, "useless_file")
 	// _, err = os.Create(uselessfile_path)
 
-	proxy, err := NewProxyParams(testdirs.SyncedDir, "https://127.0.0.1:6666", 10*time.Minute, false, false)
+	proxy, err := NewProxyParams(testdirs.SyncedDir, "https://127.0.0.1:6666", 10*time.Minute, 10*time.Minute, false, false)
 	require.NoError(err)
 
 	tsproxy := httptest.NewServer(proxy.Router())

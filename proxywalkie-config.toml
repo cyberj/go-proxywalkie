@@ -3,7 +3,7 @@
 port = "8081"
 
 # Remote server URL
-server = "http://some:8080"
+server = "http://some.server.adress:8080"
 
 # Delete files if they are not on server
 delete = true
